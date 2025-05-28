@@ -1,0 +1,37 @@
+{
+  "xunlai-jade-junkyard-cm": {
+    "name": "Xunlai Jade Junkyard",
+    "bestTime": "4:43",
+    "logUrl": "https://dps.report/CaTT-20250520-214807_ankka"
+  },
+  "aetherblade-hideout-cm": {
+    "name": "Aetherblade Hideout",
+    "bestTime": "5:23",
+    "logUrl": "https://dps.report/RVsS-20250520-215754_trin"
+  },
+  "kaineng-overlook-cm": {
+    "name": "Kaineng Overlook",
+    "bestTime": "7:00",
+    "logUrl": "https://dps.report/ttfE-20250520-213152_li"
+  },
+  "harvest-temple-cm": {
+    "name": "Harvest Temple",
+    "bestTime": "9:23",
+    "logUrl": "https://dps.report/naMF-20250520-211616_void"
+  },
+  "old-lion-court-cm": {
+    "name": "Old Lion’s Court",
+    "bestTime": "7:03",
+    "logUrl": "https://dps.report/OJ1a-20250520-214127_olc"
+  },
+  "cosmic-observatory-cm": {
+    "name": "Cosmic Observatory",
+    "bestTime": "5:54",
+    "logUrl": "https://dps.report/X0DS-20250520-210319_dagda"
+  },
+  "temple-of-fabe-cm": {
+    "name": "Temple of Fabe",
+    "bestTime": "7:54",
+    "logUrl": "https://dps.report/esVY-20250520-205408_cerus"
+  }
+}

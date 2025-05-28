@@ -1,0 +1,8 @@
+# Ignore IDE files
+.idea/
+node_modules
+# Ignore sensitive config
+config.json
+
+# (Optional) Ignore env files
+.env

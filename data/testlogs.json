@@ -1,0 +1,51 @@
+[
+  {
+    "bossName": "Dagda",
+    "strikeId": "dagda",
+    "success": true,
+    "logUrl": "https://dps.report/mntp-20250527-204201_dagda",
+    "time": 283
+  },
+  {
+    "bossName": "Cerus",
+    "strikeId": "cerus",
+    "success": true,
+    "logUrl": "https://dps.report/24UM-20250527-210438_cerus",
+    "time": 323
+  },
+  {
+    "bossName": "The Dragonvoid",
+    "strikeId": "thedragonvoid",
+    "success": true,
+    "logUrl": "https://dps.report/WLVG-20250527-212406_void",
+    "time": 420
+  },
+  {
+    "bossName": "Minister Li",
+    "strikeId": "ministerli",
+    "success": true,
+    "logUrl": "https://dps.report/hNGP-20250527-213604_li",
+    "time": 563
+  },
+  {
+    "bossName": "Prototype Vermilion",
+    "strikeId": "prototypevermilion",
+    "success": true,
+    "logUrl": "https://dps.report/0H5D-20250527-214557_olc",
+    "time": 423
+  },
+  {
+    "bossName": "Ankka",
+    "strikeId": "ankka",
+    "success": true,
+    "logUrl": "https://dps.report/1TOF-20250527-215605_ankka",
+    "time": 354
+  },
+  {
+    "bossName": "Captain Mai Trin",
+    "strikeId": "maitrin",
+    "success": true,
+    "logUrl": "https://dps.report/MLD4-20250527-220348_trin",
+    "time": 474
+  }
+]
