@@ -1,70 +1,56 @@
 const { SlashCommandBuilder } = require('discord.js');
 const sessionManager = require('../utils/sessionManager');
-const { formatEncounterEmbed } = require('../utils/embedFormatter');
-const bestTimes = require('../data/logs.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('endstrike')
-    .setDescription('End the strike session and summarize results'),
+    .setDescription('End the current strike session and summarize top DPS'),
 
-async execute(interaction) {
-  const session = sessionManager.getSession();
-  if (!session) {
-    return interaction.reply({ content: 'No active session to end.', ephemeral: true });
-  }
-
-  // Aggregate all players across encounters
-  const allPlayers = [];
-  for (const enc of session.encounters || []) {
-    if (Array.isArray(enc.players)) {
-      allPlayers.push(...enc.players);
+  async execute(interaction) {
+    const session = sessionManager.getSession();
+    if (!session) {
+      return interaction.reply({
+        content: 'No active strike session found.',
+        ephemeral: true,
+      });
     }
-  }
 
-  // Find top DPS and top CC performers
-  const topDps = allPlayers
-    .filter(p => p.dps !== undefined)
-    .sort((a, b) => b.dps - a.dps)[0];
+    const encounters = session.encounters || [];
 
-  const topCc = allPlayers
-    .filter(p => p.cc !== undefined)
-    .sort((a, b) => b.cc - a.cc)[0];
+    // Generate top DPS summary
+    const topDpsSummary = encounters.map(encounter => {
+      if (!encounter.players || encounter.players.length === 0) {
+        return `**${encounter.bossName}**: No DPS data available`;
+      }
 
-  // Format the top performer summary
-  const footerText = [
-    topDps ? `Top DPS: ${topDps.name} (${topDps.dps.toLocaleString()})` : null,
-    topCc ? `Top CC: ${topCc.name} (${topCc.cc.toLocaleString()})` : null,
-  ].filter(Boolean).join(' • ');
+      const topPlayer = encounter.players.reduce((max, player) =>
+        player.dps > max.dps ? player : max, encounter.players[0]);
 
-  // Build the final summary embed
-  const embed = formatEncounterEmbed(
-    null,
-    { updated: false },
-    session.encounters || [],
-    session.records || [],
-    bestTimes,
-    'Strike Clear Finished'
-  );
+      return `**${encounter.bossName}**: **${topPlayer.name}** - ${topPlayer.dps.toLocaleString()} DPS`;
+    }).join('\n');
 
-  // Add footer to embed
-  if (footerText && embed?.data) {
-    embed.setFooter({ text: footerText });
-  }
+    const summaryEmbed = {
+      title: 'Strike Session Summary',
+      description: topDpsSummary || 'No encounters recorded.',
+      color: 0x00ff99,
+      timestamp: new Date().toISOString(),
+    };
 
-  try {
-    if (session.sessionMessage) {
-      await session.sessionMessage.edit({ embeds: [embed] });
-    } else {
-      await interaction.channel.send({ embeds: [embed] });
+    // Edit the session message with summary
+    try {
+      if (session.sessionMessage) {
+        await session.sessionMessage.edit({ embeds: [summaryEmbed] });
+      }
+    } catch (err) {
+      console.error('Failed to update session message:', err);
     }
-  } catch (error) {
-    console.error('Failed to update session message:', error);
-  }
 
-  sessionManager.endSession();
+    // Cleanup
+    sessionManager.endSession();
 
-  await interaction.reply({ content: 'Strike session ended and summarized.', flags: 64 });
-}
-
+    await interaction.reply({
+      content: 'Strike clear ended and summary posted.',
+      ephemeral: true,
+    });
+  },
 };
