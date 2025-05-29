@@ -1,0 +1,14 @@
+{
+  "name": "Aetherblade Hideout",
+  "displayName": "🛡️ Aetherblade Hideout",
+  "color": 3447003,
+  "phases": [
+    "Mai Trin",
+    "Echo Phase 1",
+    "Echo Phase 2",
+    "Post-Puzzle Phase 1",
+    "Echo Phase 3",
+    "Post-Puzzle Phase 2"
+  ],
+  "recordFile": "aetherblade_records.json"
+}
