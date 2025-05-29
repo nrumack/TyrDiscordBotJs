@@ -1,6 +1,6 @@
 {
   "name": "Aetherblade Hideout",
-  "displayName": "🛡️ Aetherblade Hideout",
+  "displayName": "Aetherblade Hideout",
   "color": 3447003,
   "phases": [
     "Mai Trin",
@@ -10,5 +10,6 @@
     "Echo Phase 3",
     "Post-Puzzle Phase 2"
   ],
-  "recordFile": "aetherblade_records.json"
+  "recordFile": "aetherblade_records.json",
+  "logDirectory": "C:/Users/nruma/Documents/Guild Wars 2/addons/arcdps/arcdps.cbtlogs"
 }

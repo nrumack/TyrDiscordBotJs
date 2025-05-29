@@ -38,7 +38,7 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
   const sessionSummary = Object.entries(grouped).map(([strikeId, { success, fails }]) => {
     const bossName = success?.bossName || fails[0]?.bossName || 'Unknown';
 
-    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join('');
+    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
     const bossDisplay = success
       ? `[${bossName}](${success.logUrl})`
       : `${bossName}`;

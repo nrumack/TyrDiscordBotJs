@@ -46,6 +46,7 @@ async function logUploader(filePath, options = {}) {
     const json = statsRes.data;
     const players = json.players || [];
     const phases = json.phases || [];
+    const encounterSucess = json?.encounter?.result === 'Success';
 
     // Optional: save full JSON for debugging
     // fs.writeFileSync('full_log.json', JSON.stringify(json, null, 2));
@@ -111,6 +112,9 @@ async function logUploader(filePath, options = {}) {
 
     return {
       permalink,
+      success: encounterSucess,
+      phaseRecords: bestRecords,
+      result: json.encounter?.result || 'Unknown',
       players: players.map(p => ({
         name: p.characterName,
         account: p.displayName,

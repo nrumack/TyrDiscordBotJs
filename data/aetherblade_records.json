@@ -1,56 +1,62 @@
 {
   "Mai Trin": {
     "bestTime": "1:00",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Canadian Snow",
       "account": "Snow.4017",
-      "dps": 15519
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 15519,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   },
   "Echo Phase 1": {
     "bestTime": "0:22",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Canadian Snow",
       "account": "Snow.4017",
-      "dps": 42162
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 42162,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   },
   "Echo Phase 2": {
     "bestTime": "1:24",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Forgot Staff Sorry",
       "account": "Daxxed.3056",
-      "dps": 21297
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 21297,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   },
   "Post-Puzzle Phase 1": {
     "bestTime": "0:32",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Lokis Malevolence",
       "account": "Tyr.6503",
-      "dps": 28090
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 28090,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   },
   "Echo Phase 3": {
     "bestTime": "1:16",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Revenant Attika",
       "account": "Attika.8475",
-      "dps": 24226
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 24226,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   },
   "Post-Puzzle Phase 2": {
     "bestTime": "0:31",
+    "bestTimePermalink": "https://dps.report/zIcU-20250522-222926_trin",
     "topDPS": {
       "name": "Canadian Snow",
       "account": "Snow.4017",
-      "dps": 29385
-    },
-    "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+      "dps": 29385,
+      "permalink": "https://dps.report/zIcU-20250522-222926_trin"
+    }
   }
 }
