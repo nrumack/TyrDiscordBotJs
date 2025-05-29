@@ -1,6 +1,5 @@
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const config = require("./config.json");
-const sessionManager = require('./utils/sessionManager');
 const chokidar = require('chokidar');
 const path = require('path');
 
@@ -13,7 +12,6 @@ const client = new Client({
   ],
 });
 
-sessionManager.endSession();
 
 client.commands = new Collection();
 

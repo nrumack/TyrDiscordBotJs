@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { resetWatcher } = require('../utils/logWatcherInstance');
 const sessionManager = require('../utils/sessionManager');
 
 module.exports = {
@@ -38,19 +39,19 @@ module.exports = {
 
     // Edit the session message with summary
     try {
-      if (session.sessionMessage) {
-        await session.sessionMessage.edit({ embeds: [summaryEmbed] });
-      }
+        await session.channel.send({ embeds: [summaryEmbed] });
     } catch (err) {
-      console.error('Failed to update session message:', err);
+      console.error('Failed to post session message:', err);
     }
 
     // Cleanup
+    resetWatcher();
+    session.sessionMessage = null;
     sessionManager.endSession();
 
     await interaction.reply({
       content: 'Strike clear ended and summary posted.',
-      ephemeral: true,
+      flags: 64,
     });
   },
 };

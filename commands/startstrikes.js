@@ -1,12 +1,10 @@
 const { SlashCommandBuilder } = require('discord.js');
-const LogWatcher = require('../utils/logWatcher');
+const { getWatcher } = require('../utils/logWatcherInstance');
 const logUploader = require('../utils/logUploader');
 const sessionManager = require('../utils/sessionManager');
 const { formatEncounterEmbed } = require('../utils/embedFormatter');
 const { updateBestTime } = require('../utils/bestTimes');
 const bestTimes = require('../data/logs.json');
-
-let logWatcher;
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,7 +12,6 @@ module.exports = {
     .setDescription('Start a strike session and watch logs'),
 
   async execute(interaction) {
-    // Prevent multiple active sessions
     if (sessionManager.getSession()) {
       return interaction.reply({
         content: 'A strike session is already active.',
@@ -22,16 +19,14 @@ module.exports = {
       });
     }
 
-    // Start the session
     sessionManager.startSession(interaction.channel);
     const session = sessionManager.getSession();
 
-    // Initialize LogWatcher once
-    if (!logWatcher) {
-      logWatcher = new LogWatcher('C:/Users/nruma/Documents/Guild Wars 2/addons/arcdps/arcdps.cbtlogs');
-    }
+    // Get the singleton watcher
+    const logWatcher = getWatcher('C:/Users/nruma/Documents/Guild Wars 2/addons/arcdps/arcdps.cbtlogs');
 
-    // Handle new encounters
+    // Clear previous listeners and add the new one
+    logWatcher.removeAllListeners('encounter');
     logWatcher.on('encounter', async (encounter) => {
       console.log('Encounter fired:', JSON.stringify(encounter, null, 2));
 
@@ -57,14 +52,12 @@ module.exports = {
 
       session.encounters.push(encounterData);
 
-      // Track failed attempts
       session.failedLogs = session.failedLogs || {};
       if (!encounter.success) {
         session.failedLogs[encounter.strikeId] = session.failedLogs[encounter.strikeId] || [];
         session.failedLogs[encounter.strikeId].push(encounter.logUrl);
       }
 
-      // Handle record updates
       const result = updateBestTime(encounter.strikeId, encounter.time);
       if (result.updated) {
         session.records = session.records || [];
@@ -76,7 +69,6 @@ module.exports = {
         });
       }
 
-      // Format embed
       const embed = formatEncounterEmbed(
         encounterData,
         result,
@@ -86,12 +78,10 @@ module.exports = {
         session.failedLogs
       );
 
-      // Edit the original session message
       try {
         if (session.sessionMessage) {
           await session.sessionMessage.edit({ embeds: [embed] });
         } else {
-          // Should not usually happen — fallback
           session.sessionMessage = await session.channel.send({ embeds: [embed] });
         }
       } catch (err) {
@@ -99,19 +89,18 @@ module.exports = {
       }
     });
 
-    // Send initial session embed publicly
     const initialEmbed = formatEncounterEmbed(
-      {}, // no encounter
-      { updated: false }, // no record
-      [], // no encounters
-      [], // no records
-      bestTimes // current best times
+      {},
+      { updated: false },
+      [],
+      [],
+      bestTimes
     );
 
     try {
       const initialMessage = await interaction.reply({
         embeds: [initialEmbed],
-        fetchReply: true, // allows message editing later
+        withResponse: true,
       });
 
       session.sessionMessage = initialMessage;
