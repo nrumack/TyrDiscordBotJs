@@ -1,0 +1,84 @@
+{
+  "1377796571801981079": {
+    "yes": [],
+    "no": [],
+    "backup": [],
+    "title": "Aetherblade grind"
+  },
+  "undefined": {
+    "yes": [],
+    "no": [],
+    "backup": [],
+    "title": {
+      "title": "test",
+      "description": "No description provided.",
+      "yes": [],
+      "no": [],
+      "backup": []
+    }
+  },
+  "1377804508264009738": {
+    "title": "test",
+    "description": "No description provided.",
+    "yes": [],
+    "no": [],
+    "backup": []
+  },
+  "1377805298588188725": {
+    "title": "test",
+    "description": "No description provided.",
+    "yes": [],
+    "no": [],
+    "backup": []
+  },
+  "1377807005091106866": {
+    "title": "test",
+    "description": "No description provided.",
+    "yes": [],
+    "no": [],
+    "backup": []
+  },
+  "1377807276131221514": {
+    "title": "test",
+    "description": "No description provided.",
+    "yes": [],
+    "no": [],
+    "backup": []
+  },
+  "1377807745645809697": {
+    "title": "tes",
+    "description": "No description provided.",
+    "yes": [
+      "417041344918454273"
+    ],
+    "no": [],
+    "backup": []
+  },
+  "1377808678723256481": {
+    "title": "test",
+    "description": "No description provided.",
+    "yes": [
+      "417041344918454273"
+    ],
+    "no": [],
+    "backup": []
+  },
+  "1378057343039832207": {
+    "title": "Aetherblade Grind!",
+    "description": "Current best [4:56](https://dps.report/rX77-20250525-224457_trin) Current record [4:50](https://gw2wingman.nevermindcreations.de/log/f0700-20250210-214656_aetherhide_kill) Old record [4:50](https://dps.report/df9U-20240317-214916_trin)  Rotations and suggestions will be posted so keep an eye on the <#956547875142246420>  channel",
+    "yes": [
+      "267731450650951680",
+      "257245403051720704",
+      "253244803679125516",
+      "236048199704510464",
+      "361145748923875329",
+      "417041344918454273",
+      "482269767735181323",
+      "164054564654415872"
+    ],
+    "no": [
+      "273837675793088512"
+    ],
+    "backup": []
+  }
+}

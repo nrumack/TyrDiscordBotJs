@@ -1,48 +1,57 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const config = require("./config.json");
-const chokidar = require('chokidar');
-const path = require('path');
+// index.js
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import express from 'express';
+import bodyParser from 'body-parser';
+import chokidar from 'chokidar';
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import interactionCreateHandler from './listeners/interactionCreate.js';
+import { fileURLToPath } from 'url';
 
-const client = new Client({ 
+dotenv.config();
+
+// Setup __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// --- Discord Bot Setup ---
+const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds, 
-    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions
-  ],
+  ]
 });
-
 
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'commands');
 
-function loadCommand(file) {
+async function loadCommand(file) {
   try {
     const filePath = path.join(commandsPath, file);
-    delete require.cache[require.resolve(filePath)];
-    const command = require(filePath);
-    if (!command.data || !command.execute) {
-      console.warn(`Command ${file} is missing data or execute property`);
+    const command = await import(`file://${filePath}`);
+    if (!command.default?.data || !command.default?.execute) {
+      console.warn(`Command ${file} is missing data or execute`);
       return;
     }
-    client.commands.set(command.data.name, command);
-    console.log(`Loaded command: ${command.data.name}`);
+    client.commands.set(command.default.data.name, command.default);
+    console.log(`Loaded command: ${command.default.data.name}`);
   } catch (error) {
     console.error(`Error loading command ${file}:`, error);
   }
 }
 
-// Load all commands initially
-function loadAllCommands() {
-  const commandFiles = require('fs').readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+async function loadAllCommands() {
+  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
   for (const file of commandFiles) {
-    loadCommand(file);
+    await loadCommand(file);
   }
 }
 loadAllCommands();
 
-// Setup chokidar watcher
 const watcher = chokidar.watch(commandsPath, {
   persistent: true,
   ignoreInitial: true,
@@ -50,23 +59,12 @@ const watcher = chokidar.watch(commandsPath, {
 });
 
 watcher
-  .on('add', filePath => {
-    const file = path.basename(filePath);
-    console.log(`Command file added: ${file}`);
-    loadCommand(file);
-  })
-  .on('change', filePath => {
-    const file = path.basename(filePath);
-    console.log(`Command file changed: ${file}`);
-    loadCommand(file);
-  })
+  .on('add', filePath => loadCommand(path.basename(filePath)))
+  .on('change', filePath => loadCommand(path.basename(filePath)))
   .on('unlink', filePath => {
     const file = path.basename(filePath);
-    console.log(`Command file removed: ${file}`);
-    // Remove from collection by matching command name
     for (const [name, cmd] of client.commands.entries()) {
-      const cmdPath = require.resolve(path.join(commandsPath, `${name}.js`));
-      if (cmdPath === filePath) {
+      if (file === `${name}.js`) {
         client.commands.delete(name);
         console.log(`Removed command: ${name}`);
         break;
@@ -75,26 +73,41 @@ watcher
   });
 
 client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`🤖 Logged in as ${client.user.tag}`);
 });
+client.on('interactionCreate', interaction => interactionCreateHandler(interaction, client));
+client.login(process.env.DISCORD_TOKEN);
 
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+// --- Log Server Setup ---
+const app = express();
+app.use(bodyParser.json());
 
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
+app.post('/api/log', async (req, res) => {
+  const authHeader = req.headers['x-api-key'];
+  if (process.env.UPLOADER_SECRET && authHeader !== process.env.UPLOADER_SECRET) {
+    return res.status(403).json({ error: 'Invalid API key' });
+  }
+
+  const { logUrl, fileName } = req.body;
+  if (!logUrl || !fileName) {
+    return res.status(400).json({ error: 'Missing logUrl or fileName' });
+  }
+
+  console.log(`📩 Log received: ${fileName} — ${logUrl}`);
 
   try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: 'There was an error executing the command.', flags: 64 });
+    const channel = await client.channels.fetch(process.env.DISCORD_CHANNEL_ID);
+    if (channel?.isTextBased()) {
+      await channel.send(`📤 New log uploaded: [${fileName}](${logUrl})`);
+    }
+    res.status(200).json({ status: 'Log posted' });
+  } catch (err) {
+    console.error('❌ Failed to post log to Discord:', err);
+    res.status(500).json({ error: 'Failed to handle log' });
   }
 });
 
-client.login(config.token);
-
-
-
-
-//client.login('MTA2MzUyODAzNTE2NjQ2MTk2Mg.GwlvOZ.l6pviYV2pjjrtmppQ40Bz1fLKJHQBT7oMWApmQ')
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🌐 Log server running on port ${PORT}`);
+});
