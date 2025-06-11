@@ -1,42 +1,44 @@
-async function handleSignupReaction(reaction, user, added) {
-  const message = reaction.message;
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isButton()) return;
 
-  // Only handle messages created by the signup command
-  if (!message.embeds.length || !message.embeds[0].footer?.text?.startsWith('signup-')) return;
+  const match = interaction.customId.match(/^signup_(yes|no|backup)_(\d+)$/);
+  if (!match) return;
 
-  const embed = EmbedBuilder.from(message.embeds[0]);
-  const fields = embed.data.fields;
+  const [, type, signupId] = match;
+  const userId = interaction.user.id;
 
-  const getField = (name) => fields.find(f => f.name.startsWith(name));
-  const emojis = {
-    '✅': '✅ Yes',
-    '❌': '❌ No',
-    '🕗': '🕗 Backup',
-  };
+  // Remove previous signup
+  await db.query(
+    `DELETE FROM signup_participants WHERE signup_id = $1 AND user_id = $2`,
+    [signupId, userId]
+  );
 
-  const allEmojis = Object.keys(emojis);
-  if (!allEmojis.includes(reaction.emoji.name)) return;
+  // Insert new signup
+  await db.query(
+    `INSERT INTO signup_participants (signup_id, user_id, role_preference)
+     VALUES ($1, $2, $3)`,
+    [signupId, userId, type]
+  );
 
-  // Remove from all categories first
-  for (let key of allEmojis) {
-    const label = emojis[key];
-    const field = getField(label);
-    if (field && field.value.includes(`<@${user.id}>`)) {
-      const names = field.value
-        .split('\n')
-        .filter(line => line !== `<@${user.id}>`);
-      field.value = names.length ? names.join('\n') : 'None';
-      field.name = `${label} (${names.length})`;
-    }
-  }
+  // Fetch all current participants
+  const { rows } = await db.query(
+    `SELECT user_id, role_preference FROM signup_participants WHERE signup_id = $1`,
+    [signupId]
+  );
 
-  if (added) {
-    const field = getField(emojis[reaction.emoji.name]);
-    let names = field.value === 'None' ? [] : field.value.split('\n');
-    names.push(`<@${user.id}>`);
-    field.value = names.join('\n');
-    field.name = `${emojis[reaction.emoji.name]} (${names.length})`;
-  }
+  const yes = rows.filter(r => r.role_preference === 'yes').map(r => `<@${r.user_id}>`);
+  const no = rows.filter(r => r.role_preference === 'no').map(r => `<@${r.user_id}>`);
+  const backup = rows.filter(r => r.role_preference === 'backup').map(r => `<@${r.user_id}>`);
 
-  await message.edit({ embeds: [embed] });
-}
+  const format = arr => arr.length > 0 ? arr.join('\n') : 'None';
+
+  // Update embed
+  const embed = EmbedBuilder.from(interaction.message.embeds[0])
+    .spliceFields(1, 3,
+      { name: `Yes (${yes.length})`, value: format(yes), inline: false },
+      { name: `No (${no.length})`, value: format(no), inline: false },
+      { name: `Backup (${backup.length})`, value: format(backup), inline: false }
+    );
+
+  await interaction.update({ embeds: [embed] });
+});
