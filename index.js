@@ -1,10 +1,5 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 const token = process.env.TOKEN;
-if (!token) {
-  console.error('❌ BOT TOKEN not set in environment variables!');
-  process.exit(1);
-}
-
 const chokidar = require('chokidar');
 const path = require('path');
 
@@ -15,8 +10,10 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions
   ],
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
+registerReactionHandlers(client);
 
 client.commands = new Collection();
 
