@@ -1,49 +1,82 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const db = require('../data/db'); // Adjust path as needed
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
+function parseDayTimeToUnix(input) {
+  const daysMap = {
+    sun: 0,
+    mon: 1,
+    tue: 2,
+    wed: 3,
+    thu: 4,
+    fri: 5,
+    sat: 6,
+  };
+
+  const match = input.toLowerCase().match(/(sun|mon|tue|wed|thu|fri|sat)[a-z]*\s+(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+
+  const [, dayStr, hourStr, minuteStr] = match;
+  const targetDay = daysMap[dayStr];
+  const now = new Date();
+
+  const result = new Date();
+  result.setHours(parseInt(hourStr), parseInt(minuteStr), 0, 0);
+
+  // calculate days until target
+  let daysAhead = (targetDay + 7 - now.getDay()) % 7;
+  if (daysAhead === 0 && result <= now) daysAhead = 7; // if it's today but already passed
+
+  result.setDate(now.getDate() + daysAhead);
+
+  return Math.floor(result.getTime() / 1000); // Unix timestamp (seconds)
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('signup')
     .setDescription('Create a sign-up message')
     .addStringOption(option =>
-      option.setName('title').setDescription('Event Title').setRequired(true))
+      option.setName('title')
+        .setDescription('Title of the event')
+        .setRequired(true))
     .addStringOption(option =>
-      option.setName('description').setDescription('Optional description').setRequired(false))
+      option.setName('time')
+        .setDescription('When is it? (e.g., thu 20:30)')
+        .setRequired(true))
     .addStringOption(option =>
-      option.setName('timestamp').setDescription('Unix timestamp').setRequired(true)),
+      option.setName('description')
+        .setDescription('Optional extra info')
+        .setRequired(false)),
 
   async execute(interaction) {
     const title = interaction.options.getString('title');
+    const timeInput = interaction.options.getString('time');
     const description = interaction.options.getString('description') || '';
-    const timestamp = interaction.options.getString('timestamp');
-    const eventDate = new Date(parseInt(timestamp) * 1000).toISOString().slice(0, 10); // YYYY-MM-DD
 
-    // Insert into event_signups
-    const result = await db.query(
-      `INSERT INTO event_signups (event_type, event_date, created_by, notes)
-       VALUES ($1, $2, $3, $4) RETURNING id`,
-      [title, eventDate, interaction.user.id, description]
-    );
-    const signupId = result.rows[0].id;
+    const unixTimestamp = parseDayTimeToUnix(timeInput);
+    if (!unixTimestamp) {
+      return interaction.reply({ content: '❌ Invalid time format. Use something like `thu 20:30`.', ephemeral: true });
+    }
 
-    const embed = new EmbedBuilder()
-      .setTitle(title)
-      .setDescription(description)
-      .addFields(
-        { name: 'Event Time', value: `<t:${timestamp}:F>`, inline: false },
-        { name: 'Yes (0)', value: 'None', inline: false },
-        { name: 'No (0)', value: 'None', inline: false },
-        { name: 'Backup (0)', value: 'None', inline: false },
-      )
-      .setFooter({ text: `Signup ID: ${signupId}` })
-      .setColor('Blue');
+    const eventTime = `<t:${unixTimestamp}:F> (<t:${unixTimestamp}:R>)`;
 
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId(`signup_yes_${signupId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId(`signup_no_${signupId}`).setLabel('No').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId(`signup_backup_${signupId}`).setLabel('Backup').setStyle(ButtonStyle.Secondary)
+    const content = `**${title}**\n${description ? `${description}\n` : ''}\n**Event Time:** ${eventTime}`;
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('signup_yes')
+        .setLabel('Yes')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId('signup_no')
+        .setLabel('No')
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId('signup_backup')
+        .setLabel('Backup')
+        .setStyle(ButtonStyle.Secondary),
     );
 
-    await interaction.reply({ embeds: [embed], components: [buttons] });
+    await interaction.reply({ content: 'Sign-up message sent!', ephemeral: true });
+    await interaction.channel.send({ content, components: [row] });
   }
 };
