@@ -1,5 +1,10 @@
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const config = require("./config.json");
+const token = process.env.TOKEN;
+if (!token) {
+  console.error('❌ BOT TOKEN not set in environment variables!');
+  process.exit(1);
+}
+
 const chokidar = require('chokidar');
 const path = require('path');
 
@@ -92,4 +97,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(config.token);
+client.login(token);
