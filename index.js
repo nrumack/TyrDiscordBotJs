@@ -93,8 +93,3 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(config.token);
-
-
-
-
-//client.login('MTA2MzUyODAzNTE2NjQ2MTk2Mg.GwlvOZ.l6pviYV2pjjrtmppQ40Bz1fLKJHQBT7oMWApmQ')
