@@ -4,19 +4,36 @@ const db = require('../data/db');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('signup')
-    .setDescription('Create a sign-up message')
+    .setDescription('Create a signup post')
     .addStringOption(option =>
       option.setName('title')
-        .setDescription('Title of the signup')
+        .setDescription('The title of the event')
         .setRequired(true))
     .addStringOption(option =>
       option.setName('daytime')
-        .setDescription('Like "thu 20:30"')
-        .setRequired(true)),
+        .setDescription('Day and time, e.g. "thu 20:30"')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('description')
+        .setDescription('Optional description (can be multiline)')
+        .setRequired(false))
+    .addRoleOption(option =>
+      option.setName('ping')
+        .setDescription('Optional role to ping')
+        .setRequired(false)),
 
   async execute(interaction) {
     const title = interaction.options.getString('title');
     const input = interaction.options.getString('daytime');
+    const description = interaction.options.getString('description') || '';
+    const pingRole = interaction.options.getRole('ping');
+
+    if (!input) {
+      return interaction.reply({
+        content: 'You must provide the date/time in the format like "thu 20:30".',
+        ephemeral: true
+      });
+    }
 
     const [dayStr, timeStr] = input.split(/\s+/);
     const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -38,19 +55,15 @@ module.exports = {
     let date = new Date(now);
     date.setHours(hour, minute, 0, 0);
 
-    // Calculate days difference
     let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
-
-    // If day is today but time passed, schedule for next week
-    if (daysUntilTarget === 0 && date <= now) {
-      daysUntilTarget = 7;
-    }
+    if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
 
     date.setDate(now.getDate() + daysUntilTarget);
-
     const unix = Math.floor(date.getTime() / 1000);
 
-    const embedMessage = `**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
+    const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
+
+    const embedMessage = `${mention}**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n${description ? `*${description}*\n\n` : ''}**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
 
     const buttons = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('signup_yes').setLabel('Yes').setStyle(ButtonStyle.Success),
@@ -61,17 +74,17 @@ module.exports = {
     try {
       const sent = await interaction.channel.send({ content: embedMessage, components: [buttons] });
 
-      // Store event in DB (make sure to parse user ID correctly)
+      // Save event in DB
       await db.query(
         `INSERT INTO event_signups (event_type, event_date, created_by, notes)
-         VALUES ($1, $2, $3, $4) RETURNING id`,
-        ['Custom', date.toISOString(), parseInt(interaction.user.id, 10) || interaction.user.id, title]
+         VALUES ($1, $2, $3, $4)`,
+        ['Custom', date.toISOString(), interaction.user.id, title]
       );
 
-      await interaction.reply({ content: 'Sign-up message posted!', ephemeral: true });
+      await interaction.reply({ content: '✅ Sign-up posted!', ephemeral: true });
     } catch (error) {
-      console.error('Failed to send sign-up message or save to DB:', error);
-      await interaction.reply({ content: 'Failed to post sign-up message. Please check bot permissions and try again.', ephemeral: true });
+      console.error('Failed to post sign-up:', error);
+      await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions.', ephemeral: true });
     }
   }
 };
