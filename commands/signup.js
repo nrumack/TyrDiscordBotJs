@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const db = require('../data/db');
 
 module.exports = {
@@ -22,104 +22,110 @@ module.exports = {
         .setDescription('Optional role to ping')
         .setRequired(false)),
 
-async execute(interaction) {
-  const userId = interaction.user.id;
-  const username = interaction.user.username;
-  const discriminator = interaction.user.discriminator;
-  const title = interaction.options.getString('title');
-  const input = interaction.options.getString('daytime');
+  async execute(interaction) {
+    try {
+      await interaction.deferReply();
 
-    if (!input || !input.includes(':') || input.trim().split(/\s+/).length !== 2) {
-      return interaction.reply({
-        content: '❌ Invalid format. Use format like "thu 20:30".',
-        flags: 64
-      });
-    }
+      const userId = interaction.user.id;
+      const username = interaction.user.username;
+      const discriminator = interaction.user.discriminator;
+      const title = interaction.options.getString('title');
+      const input = interaction.options.getString('daytime');
+      const description = interaction.options.getString('description') || '';
+      const pingRole = interaction.options.getRole('ping');
 
-  const description = interaction.options.getString('description') || '';
-  const pingRole = interaction.options.getRole('ping');
+      if (!input || !input.includes(':') || input.trim().split(/\s+/).length !== 2) {
+        return interaction.editReply({
+          content: '❌ Invalid format. Use format like "thu 20:30".'
+        });
+      }
 
-  if (!input) {
-    return interaction.reply({
-      content: 'You must provide the date/time in the format like "thu 20:30".',
-      flags: 64
-    });
-  }
-  
-  const [dayStr, timeStr] = input.split(/\s+/);
-  const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-  const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
+      const [dayStr, timeStr] = input.trim().split(/\s+/);
+      const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
 
-  if (targetDay === -1) {
-    return interaction.reply({ content: 'Invalid day provided. Use format like "thu 20:30".', flags: 64 });
-  }
+      if (targetDay === -1) {
+        return interaction.editReply({ content: 'Invalid day provided. Use format like "thu 20:30".' });
+      }
 
-  const [hour, minute] = timeStr.split(':').map(Number);
-  if (
-    Number.isNaN(hour) || Number.isNaN(minute) ||
-    hour < 0 || hour > 23 ||
-    minute < 0 || minute > 59
-  ) {
-    return interaction.reply({ content: 'Invalid time provided. Use 24h format like "20:30".', flags: 64 });
-  }
+      const [hour, minute] = timeStr.split(':').map(Number);
+      if (
+        Number.isNaN(hour) || Number.isNaN(minute) ||
+        hour < 0 || hour > 23 ||
+        minute < 0 || minute > 59
+      ) {
+        return interaction.editReply({ content: 'Invalid time provided. Use 24h format like "20:30".' });
+      }
 
-  // Calculate date
-  const now = new Date();
-  let date = new Date(now);
-  date.setHours(hour, minute, 0, 0);
-  let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
-  if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
-  date.setDate(now.getDate() + daysUntilTarget);
-  const unix = Math.floor(date.getTime() / 1000);
+      // Calculate target date
+      const now = new Date();
+      let date = new Date(now);
+      date.setHours(hour, minute, 0, 0);
+      let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
+      if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
+      date.setDate(now.getDate() + daysUntilTarget);
+      const unix = Math.floor(date.getTime() / 1000);
 
-  // Ensure user exists before inserting event
-  try {
-    const userRes = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
-    if (userRes.rowCount === 0) {
+      // Ensure user exists
       await db.query(
-        'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
+        `INSERT INTO users (id, username, discriminator)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO NOTHING`,
         [userId, username, discriminator]
       );
+
+      const client = await db.pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        await client.query(`
+          INSERT INTO event_signups (event_type, event_date, created_by, notes)
+          VALUES ($1, $2, $3, $4)
+        `, ['Custom', date.toISOString(), userId, title]);
+
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Failed DB insert:', err);
+        return interaction.editReply({ content: '❌ Failed to post sign-up to database.' });
+      } finally {
+        client.release();
+      }
+
+      // Construct and send embed + buttons
+      const embed = new EmbedBuilder()
+        .setTitle(title)
+        .setDescription(`${description || '*No description provided.*'}`)
+        .addFields(
+          { name: 'Date', value: `<t:${unix}:F>\n<t:${unix}:R>`, inline: false },
+          { name: 'Yes (0)', value: '_None_', inline: false },
+          { name: 'No (0)', value: '_None_', inline: false },
+          { name: 'Backup (0)', value: '_None_', inline: false }
+        )
+        .setFooter({ text: `Created by ${username}#${discriminator}` })
+        .setTimestamp()
+        .setColor('Blurple');
+
+      const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`signup_yes_${signupId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`signup_no_${signupId}`).setLabel('No').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`signup_backup_${signupId}`).setLabel('Backup').setStyle(ButtonStyle.Secondary)
+      );
+
+
+      await interaction.editReply({
+        content: pingRole ? `<@&${pingRole.id}>` : null,
+        embeds: [embed],
+        components: [buttons]
+      });
+
+    } catch (error) {
+      console.error('Unexpected error in /signup:', error);
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: '❌ An error occurred while processing the sign-up.', flags: 64 });
+      } else {
+        await interaction.reply({ content: '❌ An error occurred while processing the sign-up.', flags: 64 });
+      }
     }
-  } catch (err) {
-    console.error('Error ensuring user exists:', err);
-    return interaction.reply({ content: '❌ Error creating user in database.', flags: 64 });
   }
-
-  const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
-  const embedMessage = `${mention}**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n${description ? `*${description}*\n\n` : ''}**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
-
-  const buttons = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('signup_yes').setLabel('Yes').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('signup_no').setLabel('No').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('signup_backup').setLabel('Backup').setStyle(ButtonStyle.Secondary)
-  );
-
-  const client = await db.pool.connect(); // Make sure `pool` is exported from your db module
-
-  try {
-    await client.query('BEGIN');
-
-    // Step 1: Ensure user exists
-    await client.query(`
-      INSERT INTO users (id, username, discriminator)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (id) DO NOTHING
-    `, [userId, interaction.user.username, interaction.user.discriminator]);
-
-    // Step 2: Insert sign-up event
-    await client.query(`
-      INSERT INTO event_signups (event_type, event_date, created_by, notes)
-      VALUES ($1, $2, $3, $4)
-    `, ['Custom', date.toISOString(), userId, title]);
-
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Failed to post sign-up:', error);
-    await interaction.reply({ content: '❌ Failed to post sign-up.', flags: 64 });
-    return;
-  } finally {
-    client.release();
-  }
-}};
+};
