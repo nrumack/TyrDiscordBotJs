@@ -35,7 +35,7 @@ async execute(interaction) {
   if (!input) {
     return interaction.reply({
       content: 'You must provide the date/time in the format like "thu 20:30".',
-      ephemeral: true
+      flags: 64
     });
   }
 
@@ -44,7 +44,7 @@ async execute(interaction) {
   const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
 
   if (targetDay === -1) {
-    return interaction.reply({ content: 'Invalid day provided. Use format like "thu 20:30".', ephemeral: true });
+    return interaction.reply({ content: 'Invalid day provided. Use format like "thu 20:30".', flags: 64 });
   }
 
   const [hour, minute] = timeStr.split(':').map(Number);
@@ -53,7 +53,7 @@ async execute(interaction) {
     hour < 0 || hour > 23 ||
     minute < 0 || minute > 59
   ) {
-    return interaction.reply({ content: 'Invalid time provided. Use 24h format like "20:30".', ephemeral: true });
+    return interaction.reply({ content: 'Invalid time provided. Use 24h format like "20:30".', flags: 64 });
   }
 
   // Calculate date
@@ -76,7 +76,7 @@ async execute(interaction) {
     }
   } catch (err) {
     console.error('Error ensuring user exists:', err);
-    return interaction.reply({ content: '❌ Error creating user in database.', ephemeral: true });
+    return interaction.reply({ content: '❌ Error creating user in database.', flags: 64 });
   }
 
   const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
@@ -88,21 +88,31 @@ async execute(interaction) {
     new ButtonBuilder().setCustomId('signup_backup').setLabel('Backup').setStyle(ButtonStyle.Secondary)
   );
 
+  const client = await db.pool.connect(); // Make sure `pool` is exported from your db module
+
   try {
-    await interaction.channel.send({ content: embedMessage, components: [buttons] });
+    await client.query('BEGIN');
 
-    // Only insert event after user exists
-    await db.query(
-      `INSERT INTO event_signups (event_type, event_date, created_by, notes)
-       VALUES ($1, $2, $3, $4)`,
-      ['Custom', date.toISOString(), userId, title]
-    );
+    // Step 1: Ensure user exists
+    await client.query(`
+      INSERT INTO users (id, username, discriminator)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (id) DO NOTHING
+    `, [userId, interaction.user.username, interaction.user.discriminator]);
 
-    await interaction.reply({ content: '✅ Sign-up posted!', ephemeral: true });
+    // Step 2: Insert sign-up event
+    await client.query(`
+      INSERT INTO event_signups (event_type, event_date, created_by, notes)
+      VALUES ($1, $2, $3, $4)
+    `, ['Custom', date.toISOString(), userId, title]);
+
+    await client.query('COMMIT');
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Failed to post sign-up:', error);
-    await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions or database.', ephemeral: true });
+    await interaction.reply({ content: '❌ Failed to post sign-up.', flags: 64 });
+    return;
+  } finally {
+    client.release();
   }
-}
-
-};
+}};
