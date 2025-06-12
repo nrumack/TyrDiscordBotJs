@@ -26,9 +26,16 @@ async execute(interaction) {
   const userId = interaction.user.id;
   const username = interaction.user.username;
   const discriminator = interaction.user.discriminator;
-
   const title = interaction.options.getString('title');
   const input = interaction.options.getString('daytime');
+
+    if (!input || !input.includes(':') || input.trim().split(/\s+/).length !== 2) {
+      return interaction.reply({
+        content: '❌ Invalid format. Use format like "thu 20:30".',
+        flags: 64
+      });
+    }
+
   const description = interaction.options.getString('description') || '';
   const pingRole = interaction.options.getRole('ping');
 
@@ -38,7 +45,7 @@ async execute(interaction) {
       flags: 64
     });
   }
-
+  
   const [dayStr, timeStr] = input.split(/\s+/);
   const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
