@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
-const registerReactionHandlers = require('./handlers/signupButtons');
 const token = process.env.TOKEN;
 const chokidar = require('chokidar');
 const path = require('path');
@@ -13,8 +12,6 @@ const client = new Client({
   ],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
-
-registerReactionHandlers(client);
 
 client.commands = new Collection();
 
