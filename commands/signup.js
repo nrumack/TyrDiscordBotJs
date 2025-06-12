@@ -90,7 +90,7 @@ module.exports = {
       } catch (err) {
         await client.query('ROLLBACK');
         console.error('Failed DB insert:', err);
-        return interaction.editReply({ content: '❌ Failed to post sign-up to database.' });
+        return interaction.editReply({ content: 'Failed to post sign-up to database.' });
       } finally {
         client.release();
       }
