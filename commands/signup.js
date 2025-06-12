@@ -1,3 +1,27 @@
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const db = require('../data/db');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('signup')
+    .setDescription('Create a signup post')
+    .addStringOption(option =>
+      option.setName('title')
+        .setDescription('The title of the event')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('daytime')
+        .setDescription('Day and time, e.g. "thu 20:30"')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('description')
+        .setDescription('Optional description (can be multiline)')
+        .setRequired(false))
+    .addRoleOption(option =>
+      option.setName('ping')
+        .setDescription('Optional role to ping')
+        .setRequired(false)),
+
 async execute(interaction) {
   const userId = interaction.user.id;
   const username = interaction.user.username;
@@ -80,3 +104,5 @@ async execute(interaction) {
     await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions or database.', ephemeral: true });
   }
 }
+
+};
