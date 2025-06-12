@@ -23,6 +23,24 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction) {
+    const userId = interaction.user.id;
+
+    // Make sure user exists in DB
+    const res = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (res.rowCount === 0) {
+      await db.query(
+        'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
+        [userId, interaction.user.username, interaction.user.discriminator]
+      );
+    }
+
+    // Now safe to insert sign-up, since user exists
+    await db.query(
+      `INSERT INTO event_signups (event_type, event_date, created_by, notes)
+      VALUES ($1, $2, $3, $4)`,
+      ['Custom', date.toISOString(), userId, title]
+    );
+
     const title = interaction.options.getString('title');
     const input = interaction.options.getString('daytime');
     const description = interaction.options.getString('description') || '';
@@ -72,7 +90,7 @@ module.exports = {
     );
 
     try {
-      const sent = await interaction.channel.send({ content: embedMessage, components: [buttons] });
+      await interaction.channel.send({ content: embedMessage, components: [buttons] });
 
       // Save event in DB
       await db.query(
