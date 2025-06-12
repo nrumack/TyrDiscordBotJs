@@ -24,7 +24,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply({ flags: 64 });
+      await interaction.deferReply();
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
