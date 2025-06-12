@@ -25,15 +25,6 @@ module.exports = {
 async execute(interaction) {
   const userId = interaction.user.id;
 
-  // Make sure user exists in DB
-  const res = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
-  if (res.rowCount === 0) {
-    await db.query(
-      'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
-      [userId, interaction.user.username, interaction.user.discriminator]
-    );
-  }
-
   const title = interaction.options.getString('title');
   const input = interaction.options.getString('daytime');
   const description = interaction.options.getString('description') || '';
@@ -42,10 +33,11 @@ async execute(interaction) {
   if (!input) {
     return interaction.reply({
       content: 'You must provide the date/time in the format like "thu 20:30".',
-      flasg: 64
+      ephemeral: true
     });
   }
 
+  // Parse and validate day/time input
   const [dayStr, timeStr] = input.split(/\s+/);
   const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
@@ -72,7 +64,6 @@ async execute(interaction) {
   date.setDate(now.getDate() + daysUntilTarget);
 
   const unix = Math.floor(date.getTime() / 1000);
-
   const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
 
   const embedMessage = `${mention}**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n${description ? `*${description}*\n\n` : ''}**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
@@ -83,21 +74,43 @@ async execute(interaction) {
     new ButtonBuilder().setCustomId('signup_backup').setLabel('Backup').setStyle(ButtonStyle.Secondary),
   );
 
-  try {
-    await interaction.channel.send({ content: embedMessage, components: [buttons] });
+  // Use a transaction to insert user and event atomically
+  const client = await db.connect();
 
-    // Now safe to insert sign-up after date and title are defined
-    await db.query(
+  try {
+    await client.query('BEGIN');
+
+    // Check if user exists
+    const res = await client.query('SELECT id FROM users WHERE id = $1', [userId]);
+    if (res.rowCount === 0) {
+      // Insert user
+      await client.query(
+        'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
+        [userId, interaction.user.username, interaction.user.discriminator]
+      );
+    }
+
+    // Insert event signup
+    await client.query(
       `INSERT INTO event_signups (event_type, event_date, created_by, notes)
        VALUES ($1, $2, $3, $4)`,
       ['Custom', date.toISOString(), userId, title]
     );
 
+    await client.query('COMMIT');
+
+    // Send message after DB commits
+    await interaction.channel.send({ content: embedMessage, components: [buttons] });
     await interaction.reply({ content: '✅ Sign-up posted!', ephemeral: true });
+
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Failed to post sign-up:', error);
-    await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions.', ephemeral: true });
+    await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions and database.', ephemeral: true });
+  } finally {
+    client.release();
   }
 }
+
 
 };
