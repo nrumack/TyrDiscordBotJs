@@ -8,8 +8,9 @@ module.exports = (client) => {
     const match = interaction.customId.match(/^signup_(yes|no|backup)_(\d+)$/);
     if (!match) return;
 
-    const [, type, signupId] = match;
+    const [, typeRaw, signupId] = match;
     const userId = interaction.user.id;
+    const type = typeRaw.toLowerCase();
 
     try {
       // Remove previous signup
@@ -25,7 +26,7 @@ module.exports = (client) => {
         [signupId, userId, type]
       );
 
-      // Fetch all current participants
+      // Fetch updated list
       const { rows } = await db.query(
         `SELECT user_id, role_preference FROM signup_participants WHERE signup_id = $1`,
         [signupId]
@@ -38,25 +39,37 @@ module.exports = (client) => {
       };
 
       for (const r of rows) {
-        group[r.role_preference]?.push(userMention(r.user_id));
+        const role = r.role_preference.toLowerCase();
+        if (group[role]) group[role].push(userMention(r.user_id));
       }
 
-      const format = (arr, label) =>
-        ({ name: `**${label} (${arr.length})**`, value: arr.length ? arr.join('\n') : '_None_', inline: false });
+      const format = (arr, label) => ({
+        name: `${label} (${arr.length})`,
+        value: arr.length ? arr.join('\n') : '_None_',
+        inline: false
+      });
 
-      // Update the embed
-      const embed = EmbedBuilder.from(interaction.message.embeds[0])
-        .spliceFields(1, 3, 
-          format(group.yes, 'Yes'), 
-          format(group.no, 'No'), 
-          format(group.backup, 'Backup')
-        );
+      const originalEmbed = interaction.message.embeds[0];
+      if (!originalEmbed) {
+        return await interaction.reply({ content: '❌ Could not update embed. No embed found.', flags: 64 });
+      }
 
-      await interaction.update({ embeds: [embed] });
+      const updatedEmbed = EmbedBuilder.from(originalEmbed).spliceFields(
+        1, 3,
+        format(group.yes, 'Yes'),
+        format(group.no, 'No'),
+        format(group.backup, 'Backup')
+      );
+
+      await interaction.update({ embeds: [updatedEmbed] });
 
     } catch (error) {
       console.error('Error processing signup interaction:', error);
-      await interaction.reply({ content: '❌ Failed to update sign-up.', ephemeral: true });
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({ content: '❌ Failed to update sign-up.', flags: 64 });
+      } else {
+        await interaction.reply({ content: '❌ Failed to update sign-up.', flags: 64 });
+      }
     }
   });
 };

@@ -24,7 +24,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: 64 });
 
       const userId = interaction.user.id;
       const username = interaction.user.username;
@@ -45,7 +45,7 @@ module.exports = {
       const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
 
       if (targetDay === -1) {
-        return interaction.editReply({ content: 'Invalid day provided. Use format like "thu 20:30".' });
+        return interaction.editReply({ content: '❌ Invalid day provided. Use format like "thu 20:30".' });
       }
 
       const [hour, minute] = timeStr.split(':').map(Number);
@@ -54,10 +54,9 @@ module.exports = {
         hour < 0 || hour > 23 ||
         minute < 0 || minute > 59
       ) {
-        return interaction.editReply({ content: 'Invalid time provided. Use 24h format like "20:30".' });
+        return interaction.editReply({ content: '❌ Invalid time provided. Use 24h format like "20:30".' });
       }
 
-      // Calculate target date
       const now = new Date();
       let date = new Date(now);
       date.setHours(hour, minute, 0, 0);
@@ -67,21 +66,25 @@ module.exports = {
       const unix = Math.floor(date.getTime() / 1000);
 
       // Ensure user exists
-      await db.query(
-        `INSERT INTO users (id, username, discriminator)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (id) DO NOTHING`,
-        [userId, username, discriminator]
-      );
+      await db.query(`
+        INSERT INTO users (id, username, discriminator)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (id) DO NOTHING
+      `, [userId, username, discriminator]);
 
+      // Insert event signup and retrieve ID
+      let signupId;
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
 
-        await client.query(`
+        const res = await client.query(`
           INSERT INTO event_signups (event_type, event_date, created_by, notes)
           VALUES ($1, $2, $3, $4)
+          RETURNING id
         `, ['Custom', date.toISOString(), userId, title]);
+
+        signupId = res.rows[0].id;
 
         await client.query('COMMIT');
       } catch (err) {
@@ -92,10 +95,9 @@ module.exports = {
         client.release();
       }
 
-      // Construct and send embed + buttons
       const embed = new EmbedBuilder()
         .setTitle(title)
-        .setDescription(`${description || '*No description provided.*'}`)
+        .setDescription(description || '*No description provided.*')
         .addFields(
           { name: 'Date', value: `<t:${unix}:F>\n<t:${unix}:R>`, inline: false },
           { name: 'Yes (0)', value: '_None_', inline: false },
@@ -111,7 +113,6 @@ module.exports = {
         new ButtonBuilder().setCustomId(`signup_no_${signupId}`).setLabel('No').setStyle(ButtonStyle.Danger),
         new ButtonBuilder().setCustomId(`signup_backup_${signupId}`).setLabel('Backup').setStyle(ButtonStyle.Secondary)
       );
-
 
       await interaction.editReply({
         content: pingRole ? `<@&${pingRole.id}>` : null,
