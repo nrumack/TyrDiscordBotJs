@@ -7,7 +7,6 @@ const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
 const token = process.env.TOKEN;
 
-
 async function deployCommands() {
   const commands = [];
   const commandsPath = path.join(__dirname, 'commands');
@@ -26,6 +25,7 @@ async function deployCommands() {
 
   try {
     console.log('🔁 Deploying slash commands to guild...');
+    console.log('Commands to deploy:', commands.map(c => c.name));
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: commands,
     });
@@ -35,6 +35,11 @@ async function deployCommands() {
     console.error('❌ Failed to refresh commands:', error);
     return false;
   }
+}
+
+// 👇 THIS is the missing piece
+if (require.main === module) {
+  deployCommands();
 }
 
 module.exports = deployCommands;
