@@ -22,87 +22,82 @@ module.exports = {
         .setDescription('Optional role to ping')
         .setRequired(false)),
 
-  async execute(interaction) {
-    const userId = interaction.user.id;
+async execute(interaction) {
+  const userId = interaction.user.id;
 
-    // Make sure user exists in DB
-    const res = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
-    if (res.rowCount === 0) {
-      await db.query(
-        'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
-        [userId, interaction.user.username, interaction.user.discriminator]
-      );
-    }
+  // Make sure user exists in DB
+  const res = await db.query('SELECT id FROM users WHERE id = $1', [userId]);
+  if (res.rowCount === 0) {
+    await db.query(
+      'INSERT INTO users (id, username, discriminator) VALUES ($1, $2, $3)',
+      [userId, interaction.user.username, interaction.user.discriminator]
+    );
+  }
 
-    // Now safe to insert sign-up, since user exists
+  const title = interaction.options.getString('title');
+  const input = interaction.options.getString('daytime');
+  const description = interaction.options.getString('description') || '';
+  const pingRole = interaction.options.getRole('ping');
+
+  if (!input) {
+    return interaction.reply({
+      content: 'You must provide the date/time in the format like "thu 20:30".',
+      flasg: 64
+    });
+  }
+
+  const [dayStr, timeStr] = input.split(/\s+/);
+  const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
+  if (targetDay === -1) {
+    return interaction.reply({ content: 'Invalid day provided. Use format like "thu 20:30".', ephemeral: true });
+  }
+
+  const [hour, minute] = timeStr.split(':').map(Number);
+  if (
+    Number.isNaN(hour) || Number.isNaN(minute) ||
+    hour < 0 || hour > 23 ||
+    minute < 0 || minute > 59
+  ) {
+    return interaction.reply({ content: 'Invalid time provided. Use 24h format like "20:30".', ephemeral: true });
+  }
+
+  const now = new Date();
+  let date = new Date(now);
+  date.setHours(hour, minute, 0, 0);
+
+  let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
+  if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
+
+  date.setDate(now.getDate() + daysUntilTarget);
+
+  const unix = Math.floor(date.getTime() / 1000);
+
+  const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
+
+  const embedMessage = `${mention}**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n${description ? `*${description}*\n\n` : ''}**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
+
+  const buttons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('signup_yes').setLabel('Yes').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('signup_no').setLabel('No').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('signup_backup').setLabel('Backup').setStyle(ButtonStyle.Secondary),
+  );
+
+  try {
+    await interaction.channel.send({ content: embedMessage, components: [buttons] });
+
+    // Now safe to insert sign-up after date and title are defined
     await db.query(
       `INSERT INTO event_signups (event_type, event_date, created_by, notes)
-      VALUES ($1, $2, $3, $4)`,
+       VALUES ($1, $2, $3, $4)`,
       ['Custom', date.toISOString(), userId, title]
     );
 
-    const title = interaction.options.getString('title');
-    const input = interaction.options.getString('daytime');
-    const description = interaction.options.getString('description') || '';
-    const pingRole = interaction.options.getRole('ping');
-
-    if (!input) {
-      return interaction.reply({
-        content: 'You must provide the date/time in the format like "thu 20:30".',
-        ephemeral: true
-      });
-    }
-
-    const [dayStr, timeStr] = input.split(/\s+/);
-    const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    const targetDay = weekdays.indexOf(dayStr.toLowerCase().slice(0, 3));
-    if (targetDay === -1) {
-      return interaction.reply({ content: 'Invalid day provided. Use format like "thu 20:30".', ephemeral: true });
-    }
-
-    const [hour, minute] = timeStr.split(':').map(Number);
-    if (
-      Number.isNaN(hour) || Number.isNaN(minute) ||
-      hour < 0 || hour > 23 ||
-      minute < 0 || minute > 59
-    ) {
-      return interaction.reply({ content: 'Invalid time provided. Use 24h format like "20:30".', ephemeral: true });
-    }
-
-    const now = new Date();
-    let date = new Date(now);
-    date.setHours(hour, minute, 0, 0);
-
-    let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
-    if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
-
-    date.setDate(now.getDate() + daysUntilTarget);
-    const unix = Math.floor(date.getTime() / 1000);
-
-    const mention = pingRole ? `<@&${pingRole.id}>\n\n` : '';
-
-    const embedMessage = `${mention}**${title}**\n\n<t:${unix}:F>\n<t:${unix}:R>\n\n${description ? `*${description}*\n\n` : ''}**Yes (0)**\n_None_\n\n**No (0)**\n_None_\n\n**Backup (0)**\n_None_`;
-
-    const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('signup_yes').setLabel('Yes').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('signup_no').setLabel('No').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('signup_backup').setLabel('Backup').setStyle(ButtonStyle.Secondary),
-    );
-
-    try {
-      await interaction.channel.send({ content: embedMessage, components: [buttons] });
-
-      // Save event in DB
-      await db.query(
-        `INSERT INTO event_signups (event_type, event_date, created_by, notes)
-         VALUES ($1, $2, $3, $4)`,
-        ['Custom', date.toISOString(), interaction.user.id, title]
-      );
-
-      await interaction.reply({ content: '✅ Sign-up posted!', ephemeral: true });
-    } catch (error) {
-      console.error('Failed to post sign-up:', error);
-      await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions.', ephemeral: true });
-    }
+    await interaction.reply({ content: '✅ Sign-up posted!', ephemeral: true });
+  } catch (error) {
+    console.error('Failed to post sign-up:', error);
+    await interaction.reply({ content: '❌ Failed to post sign-up. Check bot permissions.', ephemeral: true });
   }
+}
+
 };
