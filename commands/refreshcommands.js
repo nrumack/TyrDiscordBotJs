@@ -1,19 +1,26 @@
-// in refreshcommands.js
-const { REST, Routes } = require('discord.js');
-const { clientId, guildId, token } = require('../config.json');
+const { SlashCommandBuilder } = require('discord.js');
 const deployCommands = require('../deploy-commands');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('refreshcommands')
-    .setDescription('Admin only: Refreshes slash commands'),
+    .setDescription('Admin only: Refresh slash commands from server'),
 
   async execute(interaction) {
-    if (interaction.user.id !== 'YOUR_DISCORD_ID') {
-      return interaction.reply({ content: '❌ Not authorized.', ephemeral: true });
+    // Replace with your Discord user ID
+    const ownerId = 'YOUR_DISCORD_USER_ID';
+    if (interaction.user.id !== ownerId) {
+      return interaction.reply({ content: '❌ You are not authorized to use this command.', ephemeral: true });
     }
 
-    await deployCommands(); // refactor your deploy-commands.js to export a function
-    await interaction.reply({ content: '✅ Commands refreshed.', ephemeral: true });
+    await interaction.deferReply({ ephemeral: true });
+
+    const success = await deployCommands();
+
+    if (success) {
+      await interaction.editReply('✅ Slash commands have been refreshed.');
+    } else {
+      await interaction.editReply('❌ Failed to refresh commands. Check logs.');
+    }
   }
 };
