@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const sessionManager = require('../utils/sessionManager');
 const { formatEncounterEmbed } = require('../utils/embedFormatter');
 const { updateBestTime } = require('../utils/bestTimes');
@@ -13,7 +13,7 @@ module.exports = {
     if (sessionManager.getSession()) {
       return interaction.reply({
         content: 'A strike session is already active.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -31,7 +31,6 @@ module.exports = {
     try {
       await interaction.reply({
         embeds: [initialEmbed],
-        ephemeral: false,
       });
 
       session.sessionMessage = await interaction.fetchReply();
