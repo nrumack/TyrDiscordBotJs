@@ -1,4 +1,4 @@
-import { pool } from './db/pool.js';
+import { pool } from './pool.js';
 
 /**
  * Inserts a log entry into the database.
