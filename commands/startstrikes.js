@@ -5,7 +5,7 @@ import { updateBestTime } from '../utils/bestTimes.js';
 import bestTimes from '../data/logs.json' assert { type: 'json' };
 
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('startstrike')
     .setDescription('Start a strike session and wait for incoming logs'),

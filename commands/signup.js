@@ -1,7 +1,13 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
-const db = require('../data/db');
+import {
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
+} from 'discord.js';
+import db from '../data/db.js';
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('signup')
     .setDescription('Create a signup post')
@@ -34,6 +40,7 @@ module.exports = {
       const description = interaction.options.getString('description') || '';
       const pingRole = interaction.options.getRole('ping');
 
+      // Validate input format
       if (!input || !input.includes(':') || input.trim().split(/\s+/).length !== 2) {
         return interaction.editReply({
           content: '❌ Invalid format. Use format like "thu 20:30".'
@@ -57,40 +64,40 @@ module.exports = {
         return interaction.editReply({ content: '❌ Invalid time provided. Use 24h format like "20:30".' });
       }
 
+      // Build target date
       const now = new Date();
-      let date = new Date(now);
+      const date = new Date(now);
       date.setHours(hour, minute, 0, 0);
       let daysUntilTarget = (targetDay - now.getDay() + 7) % 7;
       if (daysUntilTarget === 0 && date <= now) daysUntilTarget = 7;
       date.setDate(now.getDate() + daysUntilTarget);
       const unix = Math.floor(date.getTime() / 1000);
 
-      // Ensure user exists
-      await db.query(`
-        INSERT INTO users (id, username, discriminator)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (id) DO NOTHING
-      `, [userId, username, discriminator]);
+      // Ensure user exists in the DB
+      await db.query(
+        `INSERT INTO users (id, username, discriminator)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO NOTHING`,
+        [userId, username, discriminator]
+      );
 
-      // Insert event signup and retrieve ID
+      // Insert signup
       let signupId;
       const client = await db.pool.connect();
       try {
         await client.query('BEGIN');
-
-        const res = await client.query(`
-          INSERT INTO event_signups (event_type, event_date, created_by, notes)
-          VALUES ($1, $2, $3, $4)
-          RETURNING id
-        `, ['Custom', date.toISOString(), userId, title]);
-
+        const res = await client.query(
+          `INSERT INTO event_signups (event_type, event_date, created_by, notes)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id`,
+          ['Custom', date.toISOString(), userId, title]
+        );
         signupId = res.rows[0].id;
-
         await client.query('COMMIT');
       } catch (err) {
         await client.query('ROLLBACK');
-        console.error('Failed DB insert:', err);
-        return interaction.editReply({ content: 'Failed to post sign-up to database.' });
+        console.error('❌ DB insert failed:', err);
+        return interaction.editReply({ content: '❌ Failed to post sign-up to database.' });
       } finally {
         client.release();
       }
@@ -109,9 +116,18 @@ module.exports = {
         .setColor('Blurple');
 
       const buttons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`signup_yes_${signupId}`).setLabel('Yes').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`signup_no_${signupId}`).setLabel('No').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`signup_backup_${signupId}`).setLabel('Backup').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder()
+          .setCustomId(`signup_yes_${signupId}`)
+          .setLabel('Yes')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`signup_no_${signupId}`)
+          .setLabel('No')
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId(`signup_backup_${signupId}`)
+          .setLabel('Backup')
+          .setStyle(ButtonStyle.Secondary)
       );
 
       await interaction.editReply({
@@ -122,10 +138,11 @@ module.exports = {
 
     } catch (error) {
       console.error('Unexpected error in /signup:', error);
+      const errorReply = { content: '❌ An error occurred while processing the sign-up.', flags: 64 };
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: '❌ An error occurred while processing the sign-up.', flags: 64 });
+        await interaction.followUp(errorReply);
       } else {
-        await interaction.reply({ content: '❌ An error occurred while processing the sign-up.', flags: 64 });
+        await interaction.reply(errorReply);
       }
     }
   }

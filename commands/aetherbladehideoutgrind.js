@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-const { getWatcher } = require('../utils/logWatcherInstance');
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
+import { getWatcher } from '../utils/logWatcherInstance.js';
 
-const encounter = require('../encounters/aetherblade.json');
+import encounter from '../encounters/aetherblade.json';
+
 
 // === Paths ===
 const recordsPath = path.join(__dirname, '../data', encounter.recordFile);

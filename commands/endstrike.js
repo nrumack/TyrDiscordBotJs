@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { resetWatcher } from '../utils/logWatcherInstance.js';
 import sessionManager from '../utils/sessionManager.js'
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('endstrike')
     .setDescription('End the current strike session and summarize top DPS'),

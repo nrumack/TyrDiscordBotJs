@@ -1,7 +1,8 @@
-const { EmbedBuilder, userMention } = require('discord.js');
-const db = require('../data/db');
+// signupInteractionHandler.js
+import { EmbedBuilder, userMention } from 'discord.js';
+import db from '../data/db.js';
 
-module.exports = (client) => {
+export default (client) => {
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
 
@@ -65,10 +66,11 @@ module.exports = (client) => {
 
     } catch (error) {
       console.error('Error processing signup interaction:', error);
+      const errorResponse = { content: '❌ Failed to update sign-up.', flags: 64 };
       if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: '❌ Failed to update sign-up.', flags: 64 });
+        await interaction.followUp(errorResponse);
       } else {
-        await interaction.reply({ content: '❌ Failed to update sign-up.', flags: 64 });
+        await interaction.reply(errorResponse);
       }
     }
   });

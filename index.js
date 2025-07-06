@@ -1,14 +1,22 @@
-const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
+// index.js
+import { Client, GatewayIntentBits, Partials, Collection } from 'discord.js';
+import path from 'path';
+import fs from 'fs';
+import chokidar from 'chokidar';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const token = process.env.DISCORD_TOKEN;
-const chokidar = require('chokidar');
-const path = require('path');
 
-require('dotenv').config();
-
-const client = new Client({ 
+const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds, 
-    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions
   ],
@@ -16,35 +24,36 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-
 const commandsPath = path.join(__dirname, 'commands');
 
-function loadCommand(file) {
+// 🔄 Dynamically load and reload commands using import()
+async function loadCommand(file) {
   try {
     const filePath = path.join(commandsPath, file);
-    delete require.cache[require.resolve(filePath)];
-    const command = require(filePath);
+    const fileUrl = `file://${filePath}?update=${Date.now()}`;
+    const { default: command } = await import(fileUrl);
+
     if (!command.data || !command.execute) {
-      console.warn(`Command ${file} is missing data or execute property`);
+      console.warn(`⚠️ Command ${file} is missing data or execute property`);
       return;
     }
+
     client.commands.set(command.data.name, command);
-    console.log(`Loaded command: ${command.data.name}`);
+    console.log(`✅ Loaded command: ${command.data.name}`);
   } catch (error) {
-    console.error(`Error loading command ${file}:`, error);
+    console.error(`❌ Error loading command ${file}:`, error);
   }
 }
 
-// Load all commands initially
-function loadAllCommands() {
-  const commandFiles = require('fs').readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+async function loadAllCommands() {
+  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
   for (const file of commandFiles) {
-    loadCommand(file);
+    await loadCommand(file);
   }
 }
-loadAllCommands();
+await loadAllCommands();
 
-// Setup chokidar watcher
+// 🕵️ Watch command files for changes using chokidar
 const watcher = chokidar.watch(commandsPath, {
   persistent: true,
   ignoreInitial: true,
@@ -52,34 +61,25 @@ const watcher = chokidar.watch(commandsPath, {
 });
 
 watcher
-  .on('add', filePath => {
+  .on('add', async filePath => {
     const file = path.basename(filePath);
-    console.log(`Command file added: ${file}`);
-    loadCommand(file);
+    console.log(`➕ Command added: ${file}`);
+    await loadCommand(file);
   })
-  .on('change', filePath => {
+  .on('change', async filePath => {
     const file = path.basename(filePath);
-    console.log(`Command file changed: ${file}`);
-    loadCommand(file);
+    console.log(`🔁 Command changed: ${file}`);
+    await loadCommand(file);
   })
   .on('unlink', filePath => {
     const file = path.basename(filePath);
-    console.log(`Command file removed: ${file}`);
-    // Remove from collection by matching command name
-    for (const [name, cmd] of client.commands.entries()) {
-      const cmdPath = require.resolve(path.join(commandsPath, `${name}.js`));
-      if (cmdPath === filePath) {
-        client.commands.delete(name);
-        console.log(`Removed command: ${name}`);
-        break;
-      }
-    }
+    console.log(`🗑️ Command removed: ${file}`);
+    const commandName = path.parse(file).name;
+    client.commands.delete(commandName);
+    console.log(`🧹 Removed command: ${commandName}`);
   });
 
-client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
-
+// 🧠 Handle slash commands
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -89,11 +89,17 @@ client.on('interactionCreate', async interaction => {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: 'There was an error executing the command.', flags: 64 });
+    console.error('❌ Command execution error:', error);
+    await interaction.reply({
+      content: 'There was an error executing that command.',
+      ephemeral: true
+    });
   }
 });
-console.log("logging in with", token?.length);
-console.log("DISCORD_TOKEN:", process.env.DISCORD_TOKEN);
 
+client.once('ready', () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+});
+
+console.log('🔐 Logging in with token length:', token?.length);
 client.login(token);
