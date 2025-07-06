@@ -11,6 +11,11 @@ const API_KEY = process.env.UPLOADER_API_KEY; // define this in Railway environm
 
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+  res.status(200).send('Webhook server running!');
+});
+
+
 app.post('/log-uploaded', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== API_KEY) {
@@ -21,13 +26,13 @@ app.post('/log-uploaded', async (req, res) => {
 
     try {
       await insertLog({ logUrl, isSuccess, duration, boss });
-      console.log('Log inserted for boss ${boss}: ${logUrl}');
+      console.log(`Log inserted for boss ${boss}: ${logUrl}`);
       res.sendStatus(200);
     } catch (error) {
       res.status(500).send('Database error');
     }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Express webhook server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
