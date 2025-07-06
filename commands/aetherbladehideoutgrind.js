@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { getWatcher } = require('../utils/logWatcherInstance');
-const logUploader = require('../utils/logUploader');
+
 const encounter = require('../encounters/aetherblade.json');
 
 // === Paths ===

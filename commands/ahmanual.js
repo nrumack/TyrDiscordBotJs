@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const logUploader = require('../utils/logUploader');
 
 module.exports = {
   data: new SlashCommandBuilder()
