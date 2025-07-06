@@ -1,9 +1,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { insertLog } from '../db/insertLog.js';
+import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +17,7 @@ app.use(bodyParser.json());
 app.get('/', (req, res) => {
   res.status(200).send('Webhook server running!');
 });
+
 
 
 app.post('/log-uploaded', async (req, res) => {
