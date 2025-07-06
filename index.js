@@ -1,8 +1,9 @@
 const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 const token = process.env.DISCORD_TOKEN;
 const chokidar = require('chokidar');
-require('dotenv').config();
 const path = require('path');
+
+require('dotenv').config();
 
 const client = new Client({ 
   intents: [

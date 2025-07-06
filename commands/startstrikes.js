@@ -1,8 +1,9 @@
-const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const sessionManager = require('../utils/sessionManager');
-const { formatEncounterEmbed } = require('../utils/embedFormatter');
-const { updateBestTime } = require('../utils/bestTimes');
-const bestTimes = require('../data/logs.json');
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+import sessionManager from '../utils/sessionManager.js';
+import { formatEncounterEmbed } from '../utils/embedFormatter.js';
+import { updateBestTime } from '../utils/bestTimes.js';
+import bestTimes from '../data/logs.json' assert { type: 'json' };
+
 
 module.exports = {
   data: new SlashCommandBuilder()

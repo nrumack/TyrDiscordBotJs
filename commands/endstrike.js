@@ -1,6 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { resetWatcher } = require('../utils/logWatcherInstance');
-const sessionManager = require('../utils/sessionManager');
+import { SlashCommandBuilder } from 'discord.js';
+import { resetWatcher } from '../utils/logWatcherInstance.js';
+import sessionManager from '../utils/sessionManager.js'
 
 module.exports = {
   data: new SlashCommandBuilder()

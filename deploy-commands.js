@@ -1,7 +1,7 @@
 // deploy-commands.js
-const { REST, Routes } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
+import { REST, Routes } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
 const clientId = process.env.CLIENT_ID;
 const guildId = process.env.GUILD_ID;
