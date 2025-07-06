@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
-const token = process.env.TOKEN;
+const token = process.env.DISCORD_TOKEN;
 const chokidar = require('chokidar');
+require('dotenv').config();
 const path = require('path');
 
 const client = new Client({ 
@@ -91,5 +92,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.reply({ content: 'There was an error executing the command.', flags: 64 });
   }
 });
+console.log("logging in with", token?.length);
+console.log("DISCORD_TOKEN:", process.env.DISCORD_TOKEN);
 
 client.login(token);
