@@ -23,15 +23,25 @@ async function deployCommands() {
   const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
   for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
+  const filePath = path.join(commandsPath, file);
+  try {
     const { default: command } = await import(`file://${filePath}`);
+    
+    if (!command) {
+      console.warn(`⚠️ No default export in ${file}`);
+      continue;
+    }
 
     if (command.data && typeof command.data.toJSON === 'function') {
       commands.push(command.data.toJSON());
     } else {
-      console.warn(`⚠️ Skipped command ${file}`);
+      console.warn(`⚠️ Skipped command ${file} — missing .data or .toJSON()`);
     }
+  } catch (err) {
+    console.error(`❌ Failed to load command ${file}:`, err.message);
   }
+}
+
 
   const rest = new REST({ version: '10' }).setToken(token);
 
