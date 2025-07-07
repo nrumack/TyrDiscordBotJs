@@ -2,7 +2,7 @@ const LogWatcher = require('./logWatcher');
 
 let instance = null;
 
-module.exports = {
+export default {
   getWatcher: (logsPath) => {
     if (!instance) {
       instance = new LogWatcher(logsPath);
