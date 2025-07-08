@@ -33,10 +33,10 @@ app.post('/log-uploaded', async (req, res) => {
     const duration = logDetails?.duration;
     const boss = logDetails?.enounter?.boss;
 
-    if (!logUrl || boss){
+    if (!logUrl || !boss){
       return res.status(400).send('missing required fields')
     }
-    
+
     try {
       await insertLog({ logUrl, isSuccess, duration, boss });
       console.log(`Log inserted for boss ${boss}: ${logUrl}`);
