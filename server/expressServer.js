@@ -22,16 +22,19 @@ app.get('/', (req, res) => {
 app.post('/log-uploaded', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== API_KEY) {
+    console.log('Received API key:', apiKey);
+console.log('Expected API key:', API_KEY);
     return res.status(403).send('Forbidden: Invalid API key');
   }
 
     const { logUrl, isSuccess, duration, boss } = req.body;
-
+    console.log('Incoming payload:', req.body);
     try {
       await insertLog({ logUrl, isSuccess, duration, boss });
       console.log(`Log inserted for boss ${boss}: ${logUrl}`);
       res.sendStatus(200);
     } catch (error) {
+      console.error('InsertLog failed:', error);
       res.status(500).send('Database error');
     }
 });
