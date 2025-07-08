@@ -45,7 +45,7 @@ function addRecord(record) {
   if (currentSession) currentSession.records.push(record);
 }
 
-module.exports = {
+export default {
   startSession,
   endSession,
   getSession,
