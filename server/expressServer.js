@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use = express();
 const API_KEY = process.env.UPLOADER_API_KEY; // define this in Railway environment variables
 
 app.use(bodyParser.json());
@@ -37,6 +37,7 @@ app.post('/log-uploaded', async (req, res) => {
     }
 });
 
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
