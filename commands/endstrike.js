@@ -1,5 +1,4 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { resetWatcher } from '../utils/logWatcherInstance.js';
 import sessionManager from '../utils/sessionManager.js'
 
 export default {
@@ -45,7 +44,6 @@ export default {
     }
 
     // Cleanup
-    resetWatcher();
     session.sessionMessage = null;
     sessionManager.endSession();
 

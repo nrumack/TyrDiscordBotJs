@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import sessionManager from '../utils/sessionManager.js';
 import { formatEncounterEmbed } from '../utils/embedFormatter.js';
-import { updateBestTime } from '../utils/bestTimes.js';
 import bestTimes from '../data/logs.json' assert { type: 'json' };
 
 
