@@ -9,7 +9,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
-app.use = express();
 const API_KEY = process.env.UPLOADER_API_KEY; // define this in Railway environment variables
 
 app.use(bodyParser.json());

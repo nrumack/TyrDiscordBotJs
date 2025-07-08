@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
-const deployCommands = require('../deploy-commands');
+import { SlashCommandBuilder }  from 'discord.js';
+import deployCommands from '../deploy-commands';
 
 module.exports = {
   data: new SlashCommandBuilder()
