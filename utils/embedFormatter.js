@@ -12,11 +12,12 @@ import { EmbedBuilder } from 'discord.js';
 function formatEncounterEmbed(encounter, result, allEncounters, newRecords, bestTimes = {}) {
   const embed = new EmbedBuilder()
     .setTitle('Strike Mission Progress')
-    .setColor(result.updated ? 0x00FF00 : 0x5865F2)
+    .setColor(result.updated ? 0x00ff00 : 0x5865f2)
     .setTimestamp()
-    .setDescription(encounter?.bossName
-      ? `New log for **${encounter.bossName}**`
-      : 'Strike session started.');
+    .setDescription(
+      'Strike session in progress.\n' +
+      (encounter?.bossName ? `New log received for **${encounter.bossName}**.` : '')
+    );
 
   // === CURRENT BEST TIMES ===
   const bestTimesText =
@@ -24,7 +25,11 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
       .map(entry => `• [${entry.name}](${entry.logUrl}) – **${entry.bestTime}**`)
       .join('\n') || 'No records yet.';
 
-  embed.addFields({ name: 'Current Best Times', value: bestTimesText });
+  embed.addFields({
+    name: 'Current Best Times',
+    value: bestTimesText,
+    inline: false,
+  });
 
   // === CLEARS THIS SESSION ===
   const grouped = {};
@@ -38,10 +43,14 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
       const bossName = success?.bossName || fails[0]?.bossName || 'Unknown';
       const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
       const bossDisplay = success ? `[${bossName}](${success.logUrl})` : bossName;
-      return `• ${bossDisplay}${failLinks}`;
+      return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
     }).join('\n') || 'No clears yet.';
 
-  embed.addFields({ name: 'Clears This Session', value: sessionSummary });
+  embed.addFields({
+    name: 'Clears This Session',
+    value: sessionSummary,
+    inline: false,
+  });
 
   // === NEW RECORDS ===
   const recordsSummary = newRecords.length
@@ -50,7 +59,11 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
       ).join('\n')
     : 'No new records set.';
 
-  embed.addFields({ name: 'New Records', value: recordsSummary });
+  embed.addFields({
+    name: 'New Records',
+    value: recordsSummary,
+    inline: false,
+  });
 
   return embed;
 }
