@@ -11,22 +11,11 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const API_KEY = process.env.UPLOADER_API_KEY; // define this in Railway environment variables
 
-app.use(bodyParser.json());
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.status(200).send('Webhook server running!');
 });
-
-app.use((req, res, next) => {
-  let rawData = '';
-  req.on('data', chunk => rawData += chunk);
-  req.on('end', () => {
-    console.log('Raw incoming data:', rawData);
-    next();
-  });
-});
-
-
 
 app.post('/log-uploaded', async (req, res) => {
   console.log('Raw body:', JSON.stringify(req.body, null, 2));
