@@ -24,6 +24,9 @@ app.use((req, res, next) => {
 
 
 app.post('/log-uploaded', async (req, res) => {
+  console.log('Raw body:', JSON.stringify(req.body, null, 2));
+console.log('Headers:', req.headers);
+
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== API_KEY) {
     console.log('Received API key:', apiKey);
@@ -37,7 +40,8 @@ app.post('/log-uploaded', async (req, res) => {
     const duration = logDetails?.duration;
     const boss = logDetails?.enounter?.boss;
 
-    if (!logUrl || !boss){
+    if (!logUrl || !logDetails?.encounter?.boss){
+      console.error('Validation failed:', { logUrl, boss: logDetails?.encounter?.boss });
       return res.status(400).send('missing required fields')
     }
 
