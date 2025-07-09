@@ -14,30 +14,48 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     .setTitle('Strike Mission Progress')
     .setColor(result.updated ? 0x00ff00 : 0x5865f2)
     .setDescription('Strike session active. Logs will appear below.')
-    .setFooter({ text: encounter?.bossName ? `Latest log: ${encounter.bossName}` : 'Session ongoing' })
+    .setFooter({
+      text: encounter?.bossName
+        ? `Latest log: ${encounter.bossName}`
+        : 'Session ongoing'
+    })
     .setTimestamp();
 
   // === FIELD: Current Best Times ===
-  const bestTimesText = Object.values(bestTimes)
-    .map(({ name, logUrl, bestTime }) => `• [${name}](${logUrl}) – **${bestTime}**`)
-    .join('\n') || 'No records yet.';
+  if (!bestTimes || Object.keys(bestTimes).length === 0) {
+    embed.addFields({
+      name: 'Current Best Times',
+      value: 'Record data missing or unavailable.',
+      inline: false
+    });
+  } else {
+    const bestTimesText = Object.values(bestTimes)
+      .map(({ name, logUrl, bestTime }) => `• [${name}](${logUrl}) – **${bestTime}**`)
+      .join('\n');
 
-  embed.addFields({
-    name: 'Current Best Times',
-    value: bestTimesText,
-    inline: false
-  });
+    embed.addFields({
+      name: 'Current Best Times',
+      value: bestTimesText || 'No records yet.',
+      inline: false
+    });
+  }
 
-  // === Clears This Session ===
+  // === FIELD: Clears This Session ===
   const grouped = {};
   for (const e of allEncounters) {
-    if (!grouped[e.strikeId]) grouped[e.strikeId] = { bossName: e.bossName, success: null, fails: [] };
-    e.success ? (grouped[e.strikeId].success = e) : grouped[e.strikeId].fails.push(e);
+    if (!grouped[e.strikeId]) {
+      grouped[e.strikeId] = { bossName: e.bossName, success: null, fails: [] };
+    }
+    e.success
+      ? (grouped[e.strikeId].success = e)
+      : grouped[e.strikeId].fails.push(e);
   }
 
   const sessionSummary = Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
     const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
-    const bossDisplay = success ? `[${bossName}](${success.logUrl})` : bossName;
+    const bossDisplay = success
+      ? `[${bossName}](${success.logUrl})`
+      : bossName;
     return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
   }).join('\n') || 'No logs yet.';
 

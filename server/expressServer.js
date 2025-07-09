@@ -43,21 +43,20 @@ app.post('/log-uploaded', async (req, res) => {
     return res.status(400).send('Missing required fields');
   }
 
-
     try {
       await insertLog({ logUrl, isSuccess, duration, bossId, boss });
       console.log(`Log inserted for boss ${boss}: ${logUrl}`);
 
       const session = sessionManager.getSession();
-console.log('✅ sessionMessage exists:', session.sessionMessage?.id);
+      console.log('✅ sessionMessage exists:', session.sessionMessage?.id);
 
-if (!session) {
-  console.log('⚠️ No active session');
-} else if (!session.sessionMessage) {
-  console.log('⚠️ sessionMessage is undefined. Did bot restart or session not store correctly?');
-} else {
-  console.log('✅ sessionMessage exists:', session.sessionMessage.id);
-}
+      if (!session) {
+        console.log('⚠️ No active session');
+      } else if (!session.sessionMessage) {
+        console.log('⚠️ sessionMessage is undefined. Did bot restart or session not store correctly?');
+      } else {
+        console.log('✅ sessionMessage exists:', session.sessionMessage.id);
+      }
 
 
       if (session && session.sessionMessage) {
