@@ -30,13 +30,9 @@ export default {
     );
 
     try {
-      // 📤 Send the message and store it for editing later
-      await interaction.reply({
-        embeds: [initialEmbed],
-      });
-
+      await interaction.reply({ embeds: [initialEmbed] });
       const sessionMessage = await interaction.fetchReply();
-      sessionManager.setSessionMessage(sessionMessage);
+      sessionManager.setSessionMessage(sessionMessage); 
 
       console.log('🚀 Strike session started and message stored!');
     } catch (err) {

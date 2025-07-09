@@ -33,7 +33,7 @@ function isActive() {
 }
 
 function setSessionMessage(message) {
-  if (currentSession) currentSession.message = message;
+  if (currentSession) currentSession.sessionMessage = message;
 }
 
 function addEncounter(encounter) {
