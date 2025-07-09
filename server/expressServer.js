@@ -1,7 +1,7 @@
 import express from 'express';
 import sessionManager from '../utils/sessionManager.js';
 import { formatEncounterEmbed } from '../utils/embedFormatter.js';
-import { bestTimes } from '../utils/bestTimes.js';
+import { bestTimes } from '../data/logs.json' assert { type: 'json' };
 import { insertLog } from '../db/insertLog.js';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -63,7 +63,6 @@ app.post('/log-uploaded', async (req, res) => {
           logUrl
         });
         
-        const bestTimes = getBestTimes();
         const updatedEmbed = formatEncounterEmbed(
           { bossName: boss },
           { updated: true },
