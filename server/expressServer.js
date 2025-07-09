@@ -66,6 +66,7 @@ app.post('/log-uploaded', async (req, res) => {
           success: isSuccess,
           logUrl
         });
+        console.log('Best times passed into formatter:', JSON.stringify(bestTimes, null, 2));
 
         const updatedEmbed = formatEncounterEmbed(
           { bossName: boss },
