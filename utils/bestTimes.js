@@ -5,7 +5,7 @@ const bossMap = require('./displayNames');
 const logPath = path.join(__dirname, '../data/logs.json');
 let logs = JSON.parse(fs.readFileSync(logPath, 'utf8'));
 
-function updateBestTime(bossName, newTime, logUrl) {
+function bestTimes(bossName, newTime, logUrl) {
   const id = bossMap[bossName];
   if (!id || !logs[id]) return { updated: false };
 
