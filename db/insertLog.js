@@ -9,17 +9,17 @@ import { pool } from './pool.js';
  * @param {string|number} params.boss - Boss name or ID
  */
 
-export async function insertLog({ logUrl, isSuccess, duration, boss}) {
+export async function insertLog({ logUrl, isSuccess, duration, bossId, boss}) {
     if (!logUrl || !boss) {
         throw new Error('Missing required log data');
     }
 
     const query = `
-    INSERT INTO logs (dps_report_url, success, duration, boss_id)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO logs (dps_report_url, success, duration, boss_id, boss_name)
+    VALUES ($1, $2, $3, $4, $5)
     `;
 
-    const values = [logUrl, isSuccess ?? false, duration ?? null, boss];
+    const values = [logUrl, isSuccess ?? false, duration ?? null, bossId, boss];
 
     try {
         await pool.query(query, values);
