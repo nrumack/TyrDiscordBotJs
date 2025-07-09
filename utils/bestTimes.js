@@ -1,16 +1,16 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import bossMap from './displayNames.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename); 
 
 const logPath = path.join(__dirname, '../data/logs.json');
 let logs = JSON.parse(fs.readFileSync(logPath, 'utf8'));
 
 /**
  * Updates best time for a boss if the new time is faster.
- * @param {string} bossName
- * @param {string} newTime - formatted as "mm:ss"
- * @param {string} logUrl - link to the DPS report
- * @returns {object} result of update check
  */
 export function bestTimes(bossName, newTime, logUrl) {
   const id = bossMap[bossName];
