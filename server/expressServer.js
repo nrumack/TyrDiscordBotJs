@@ -49,6 +49,7 @@ app.post('/log-uploaded', async (req, res) => {
       console.log(`Log inserted for boss ${boss}: ${logUrl}`);
 
       const session = sessionManager.getSession();
+console.log('✅ sessionMessage exists:', session.sessionMessage?.id);
 
 if (!session) {
   console.log('⚠️ No active session');
