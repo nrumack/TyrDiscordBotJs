@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import bossMap from './displayNames.js'; // adjust if needed
+import bossMap from './displayNames.js';
 
 const logPath = path.join(__dirname, '../data/logs.json');
 let logs = JSON.parse(fs.readFileSync(logPath, 'utf8'));

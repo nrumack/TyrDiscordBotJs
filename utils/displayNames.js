@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   'Captain Mai Trin': 'Aetherblade Hideout',
   'Ankka': 'Xunlai Jade Junkyard',
   'Minister Li': 'Kaineng Overlook',
