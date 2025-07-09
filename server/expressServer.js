@@ -45,38 +45,44 @@ app.post('/log-uploaded', async (req, res) => {
 
 
     try {
-  await insertLog({ logUrl, isSuccess, duration, bossId, boss });
-  console.log(`Log inserted for boss ${boss}: ${logUrl}`);
+      await insertLog({ logUrl, isSuccess, duration, bossId, boss });
+      console.log(`Log inserted for boss ${boss}: ${logUrl}`);
 
-  const session = sessionManager.getSession();
-  console.log('Session active?', !!session);
-  console.log('sessionMessage available?', !!session?.sessionMessage?.id);
+      const session = sessionManager.getSession();
 
-  if (session && session.sessionMessage) {
-    sessionManager.addEncounter({
-      bossName: boss,
-      strikeId: bossId,
-      success: isSuccess,
-      logUrl
-    });
-
-    const updatedEmbed = formatEncounterEmbed(
-      { bossName: boss },
-      { updated: true },
-      sessionManager.getEncounters(),
-      sessionManager.getRecords(),
-      bestTimes
-    );
-
-    await session.sessionMessage.edit({ embeds: [updatedEmbed] });
-  }
-
-  res.sendStatus(200);
-} catch (error) {
-  console.error('InsertLog failed:', error);
-  res.status(500).send('Database error');
+if (!session) {
+  console.log('⚠️ No active session');
+} else if (!session.sessionMessage) {
+  console.log('⚠️ sessionMessage is undefined. Did bot restart or session not store correctly?');
+} else {
+  console.log('✅ sessionMessage exists:', session.sessionMessage.id);
 }
 
+
+      if (session && session.sessionMessage) {
+        sessionManager.addEncounter({
+          bossName: boss,
+          strikeId: bossId,
+          success: isSuccess,
+          logUrl
+        });
+
+        const updatedEmbed = formatEncounterEmbed(
+          { bossName: boss },
+          { updated: true },
+          sessionManager.getEncounters(),
+          sessionManager.getRecords(),
+          bestTimes
+        );
+
+        await session.sessionMessage.edit({ embeds: [updatedEmbed] });
+      }
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('InsertLog failed:', error);
+      res.status(500).send('Database error');
+    }
 
 });
 
