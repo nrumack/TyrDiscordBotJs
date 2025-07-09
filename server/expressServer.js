@@ -50,14 +50,10 @@ app.post('/log-uploaded', async (req, res) => {
       const session = sessionManager.getSession();
       console.log('✅ sessionMessage exists:', session.sessionMessage?.id);
 
-      if (!session) {
-        console.log('⚠️ No active session');
-      } else if (!session.sessionMessage) {
-        console.log('⚠️ sessionMessage is undefined. Did bot restart or session not store correctly?');
-      } else {
-        console.log('✅ sessionMessage exists:', session.sessionMessage.id);
+      if (!session || !session.sessionMessage) {
+        console.warn('⏳ Embed not ready — delaying update or skipping this log.');
+        return res.sendStatus(202); // Accepted but skipped
       }
-
 
       if (session && session.sessionMessage) {
         sessionManager.addEncounter({
@@ -66,8 +62,8 @@ app.post('/log-uploaded', async (req, res) => {
           success: isSuccess,
           logUrl
         });
-        console.log('Best times passed into formatter:', JSON.stringify(bestTimes, null, 2));
-
+        
+        const bestTimes = getBestTimes();
         const updatedEmbed = formatEncounterEmbed(
           { bossName: boss },
           { updated: true },
