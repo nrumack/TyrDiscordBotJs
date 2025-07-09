@@ -1,5 +1,6 @@
 import express from 'express';
 import sessionManager from '../utils/sessionManager.js';
+import { formatEncounterEmbed } from '../utils/embedFormatter.js';
 import { insertLog } from '../db/insertLog.js';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -26,8 +27,6 @@ app.post('/log-uploaded', async (req, res) => {
 
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== API_KEY) {
-    console.log('Received API key:', apiKey);
-    console.log('Expected API key:', API_KEY);
     return res.status(403).send('Forbidden: Invalid API key');
   }
 
