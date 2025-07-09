@@ -52,8 +52,14 @@ app.post('/log-uploaded', async (req, res) => {
       console.error('InsertLog failed:', error);
       res.status(500).send('Database error');
     }
+if (!session?.sessionMessage?.edit) {
+  console.log('❌ sessionMessage is not defined or editable');
+}
 
     const session = sessionManager.getSession();
+console.log('Session active?', !!session);
+console.log('Session message:', session?.sessionMessage?.id);
+
     if (session && session.sessionMessage) {
         const updatedEmbed = formatEncounterEmbed(
         { bossName: boss },
