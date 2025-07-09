@@ -55,19 +55,12 @@ app.post('/log-uploaded', async (req, res) => {
 
     const session = sessionManager.getSession();
     if (session && session.sessionMessage) {
-      sessionManager.addEncounter({
-        bossName: boss,
-        strikeId: bossId,
-        success: isSuccess,
-        logUrl
-      });
-
-      const updatedEmbed = formatEncounterEmbed(
+        const updatedEmbed = formatEncounterEmbed(
         { bossName: boss },
         { updated: true },
         sessionManager.getEncounters(),
         sessionManager.getRecords(),
-        bestTimes // assuming you imported this
+        bestTimes
       );
 
       try {
