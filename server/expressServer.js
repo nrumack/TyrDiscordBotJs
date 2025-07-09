@@ -45,36 +45,38 @@ app.post('/log-uploaded', async (req, res) => {
 
 
     try {
-      await insertLog({ logUrl, isSuccess, duration, bossId, boss });
-      console.log(`Log inserted for boss ${boss}: ${logUrl}`);
-      res.sendStatus(200);
-    } catch (error) {
-      console.error('InsertLog failed:', error);
-      res.status(500).send('Database error');
-    }
-if (!session?.sessionMessage?.edit) {
-  console.log('❌ sessionMessage is not defined or editable');
+  await insertLog({ logUrl, isSuccess, duration, bossId, boss });
+  console.log(`Log inserted for boss ${boss}: ${logUrl}`);
+
+  const session = sessionManager.getSession();
+  console.log('Session active?', !!session);
+  console.log('sessionMessage available?', !!session?.sessionMessage?.id);
+
+  if (session && session.sessionMessage) {
+    sessionManager.addEncounter({
+      bossName: boss,
+      strikeId: bossId,
+      success: isSuccess,
+      logUrl
+    });
+
+    const updatedEmbed = formatEncounterEmbed(
+      { bossName: boss },
+      { updated: true },
+      sessionManager.getEncounters(),
+      sessionManager.getRecords(),
+      bestTimes
+    );
+
+    await session.sessionMessage.edit({ embeds: [updatedEmbed] });
+  }
+
+  res.sendStatus(200);
+} catch (error) {
+  console.error('InsertLog failed:', error);
+  res.status(500).send('Database error');
 }
 
-    const session = sessionManager.getSession();
-console.log('Session active?', !!session);
-console.log('Session message:', session?.sessionMessage?.id);
-
-    if (session && session.sessionMessage) {
-        const updatedEmbed = formatEncounterEmbed(
-        { bossName: boss },
-        { updated: true },
-        sessionManager.getEncounters(),
-        sessionManager.getRecords(),
-        bestTimes
-      );
-
-      try {
-        await session.sessionMessage.edit({ embeds: [updatedEmbed] });
-      } catch (err) {
-        console.error('Failed to update session message:', err);
-      }
-    }
 
 });
 
