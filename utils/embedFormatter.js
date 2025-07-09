@@ -30,23 +30,19 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
 
   // === FIELD: Clears This Session ===
   const grouped = {};
-  for (const e of allEncounters) {
-    if (!grouped[e.strikeId]) grouped[e.strikeId] = { success: null, fails: [] };
-    e.success ? (grouped[e.strikeId].success = e) : grouped[e.strikeId].fails.push(e);
-  }
+for (const e of allEncounters) {
+  if (!grouped[e.strikeId]) grouped[e.strikeId] = { bossName: e.bossName, success: null, fails: [] };
+  e.success ? (grouped[e.strikeId].success = e) : grouped[e.strikeId].fails.push(e);
+}
 
-  const sessionSummary = Object.entries(grouped).map(([strikeId, { success, fails }]) => {
-    const bossName = success?.bossName || fails[0]?.bossName || 'Unknown';
-    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
-    const bossDisplay = success ? `[${bossName}](${success.logUrl})` : bossName;
-    return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
-  }).join('\n') || 'No clears yet.';
+const sessionSummary = Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
+  const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
+  const bossDisplay = success
+    ? `[${bossName}](${success.logUrl})`
+    : bossName;
+  return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
+}).join('\n') || 'No logs yet.';
 
-  embed.addFields({
-    name: 'Clears This Session',
-    value: sessionSummary,
-    inline: false
-  });
 
   // === FIELD: New Records ===
   const recordsSummary = newRecords.length
