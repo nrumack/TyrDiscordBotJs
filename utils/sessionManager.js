@@ -5,7 +5,6 @@ function startSession(channel) {
   currentSession = {
       channel,
       encounters: [],      // successful clears
-      failedLogs: {},      // { strikeId: [logUrl1, logUrl2] }
       records: [],         // new records this session
       sessionMessage: null // message that gets edited every log
   };

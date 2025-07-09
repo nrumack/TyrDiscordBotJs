@@ -1,5 +1,5 @@
 import express from 'express';
-import bodyParser from 'body-parser';
+import sessionManager from '../utils/sessionManager.js';
 import { insertLog } from '../db/insertLog.js';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -52,6 +52,31 @@ app.post('/log-uploaded', async (req, res) => {
       console.error('InsertLog failed:', error);
       res.status(500).send('Database error');
     }
+
+    const session = sessionManager.getSession();
+    if (session && session.sessionMessage) {
+      sessionManager.addEncounter({
+        bossName: boss,
+        strikeId: bossId,
+        success: isSuccess,
+        logUrl
+      });
+
+      const updatedEmbed = formatEncounterEmbed(
+        { bossName: boss },
+        { updated: true },
+        sessionManager.getEncounters(),
+        sessionManager.getRecords(),
+        bestTimes // assuming you imported this
+      );
+
+      try {
+        await session.sessionMessage.edit({ embeds: [updatedEmbed] });
+      } catch (err) {
+        console.error('Failed to update session message:', err);
+      }
+    }
+
 });
 
 const PORT = process.env.PORT || 3000;
