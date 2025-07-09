@@ -25,4 +25,4 @@ function updateBestTime(bossName, newTime, logUrl) {
   return { updated: false, oldTime: logs[id].bestTime };
 }
 
-module.exports = { updateBestTime };
+export default { updateBestTime };

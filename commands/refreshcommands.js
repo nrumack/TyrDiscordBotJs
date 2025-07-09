@@ -1,7 +1,7 @@
 import { SlashCommandBuilder }  from 'discord.js';
 import deployCommands from '../deploy-commands';
-
-module.exports = {
+ 
+export default {
   data: new SlashCommandBuilder()
     .setName('refreshcommands')
     .setDescription('Admin only: Refresh slash commands from server'),
