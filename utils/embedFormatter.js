@@ -28,21 +28,24 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     inline: false
   });
 
-  // === FIELD: Clears This Session ===
-  const sessionSummary =
-  Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
+  // === Clears This Session ===
+  const grouped = {};
+  for (const e of allEncounters) {
+    if (!grouped[e.strikeId]) grouped[e.strikeId] = { bossName: e.bossName, success: null, fails: [] };
+    e.success ? (grouped[e.strikeId].success = e) : grouped[e.strikeId].fails.push(e);
+  }
+
+  const sessionSummary = Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
     const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
     const bossDisplay = success ? `[${bossName}](${success.logUrl})` : bossName;
     return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
-      }).join('\n');
+  }).join('\n') || 'No logs yet.';
 
-    embed.addFields({
-      name: 'Clears This Session',
-      value: sessionSummary || 'No encounters recorded yet.',
-      inline: false
-    });
-
-
+  embed.addFields({
+    name: 'Clears This Session',
+    value: sessionSummary,
+    inline: false
+  });
 
   // === FIELD: New Records ===
   const recordsSummary = newRecords.length
