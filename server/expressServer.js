@@ -17,6 +17,10 @@ app.get('/', (req, res) => {
   res.status(200).send('Webhook server running!');
 });
 
+app.use((req, res, next) => {
+  console.log('Raw body:', JSON.stringify(req.body, null, 2));
+  next();
+});
 
 
 app.post('/log-uploaded', async (req, res) => {
