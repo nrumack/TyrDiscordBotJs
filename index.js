@@ -98,6 +98,13 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
+client.on('interactionCreate', async interaction => {
+  if (interaction.isButton()) {
+    console.log('➡️ Button clicked:', interaction.customId);
+  }
+});
+
+
 client.once('ready', () => {
   console.log(`🤖 Logged in as ${client.user.tag}`);
 });

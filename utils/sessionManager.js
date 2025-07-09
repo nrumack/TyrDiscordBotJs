@@ -33,7 +33,6 @@ function isActive() {
 }
 
 function setSessionMessage(message) {
-  console.log('✅ sessionMessage stored:', message.id);
   if (currentSession) currentSession.sessionMessage = message;
 }
 
