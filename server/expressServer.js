@@ -35,12 +35,13 @@ app.post('/log-uploaded', async (req, res) => {
     console.log('Incoming payload:', req.body);
     const isSuccess = logDetails?.isSuccess;
     const duration = Math.floor(logDetails?.duration ?? 0);
-    const boss = logDetails?.encounter?.boss;
+    const boss = logDetails?.encounter?.bossId;
 
-    if (!logUrl || !logDetails?.encounter?.boss){
-      console.error('Validation failed:', { logUrl, boss: logDetails?.encounter?.boss });
-      return res.status(400).send('missing required fields')
-    }
+  if (!logUrl || !boss) {
+    console.error('Validation failed:', { logUrl, boss });
+    return res.status(400).send('Missing required fields');
+  }
+
 
     try {
       await insertLog({ logUrl, isSuccess, duration, boss });
