@@ -35,6 +35,7 @@ app.post('/log-uploaded', async (req, res) => {
     console.log('Incoming payload:', req.body);
     const isSuccess = logDetails?.isSuccess;
     const duration = Math.floor(logDetails?.duration ?? 0);
+    const bossId = logDetails?.encounter.bossId;
     const boss = logDetails?.encounter?.boss;
 
   if (!logUrl || !boss) {
@@ -44,7 +45,7 @@ app.post('/log-uploaded', async (req, res) => {
 
 
     try {
-      await insertLog({ logUrl, isSuccess, duration, boss });
+      await insertLog({ logUrl, isSuccess, duration, bossId, boss });
       console.log(`Log inserted for boss ${boss}: ${logUrl}`);
       res.sendStatus(200);
     } catch (error) {
