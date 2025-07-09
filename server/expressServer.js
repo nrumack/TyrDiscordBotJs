@@ -34,7 +34,7 @@ app.post('/log-uploaded', async (req, res) => {
     const { logUrl, logDetails } = req.body;
     console.log('Incoming payload:', req.body);
     const isSuccess = logDetails?.isSuccess;
-    const duration = logDetails?.duration;
+    const duration = Math.floor(logDetails?.duration ?? 0);
     const boss = logDetails?.encounter?.boss;
 
     if (!logUrl || !logDetails?.encounter?.boss){
