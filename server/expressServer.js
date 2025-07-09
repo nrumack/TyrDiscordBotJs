@@ -35,7 +35,7 @@ app.post('/log-uploaded', async (req, res) => {
     console.log('Incoming payload:', req.body);
     const isSuccess = logDetails?.isSuccess;
     const duration = logDetails?.duration;
-    const boss = logDetails?.enounter?.boss;
+    const boss = logDetails?.encounter?.boss;
 
     if (!logUrl || !logDetails?.encounter?.boss){
       console.error('Validation failed:', { logUrl, boss: logDetails?.encounter?.boss });
