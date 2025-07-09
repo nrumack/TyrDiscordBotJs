@@ -18,14 +18,22 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res, next) => {
-  console.log('Raw body:', JSON.stringify(req.body, null, 2));
-  next();
+  let rawData = '';
+  req.on('data', chunk => rawData += chunk);
+  req.on('end', () => {
+    console.log('Raw incoming data:', rawData);
+    next();
+  });
 });
+
 
 
 app.post('/log-uploaded', async (req, res) => {
   console.log('Raw body:', JSON.stringify(req.body, null, 2));
-console.log('Headers:', req.headers);
+  console.log('Headers:', req.headers);
+  console.log('typeof logUrl:', typeof req.body.logUrl);
+  console.log('logUrl value:', req.body.logUrl);
+
 
   const apiKey = req.headers['x-api-key'];
   if (apiKey !== API_KEY) {
