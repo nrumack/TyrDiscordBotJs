@@ -6,7 +6,6 @@ import chokidar from 'chokidar';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import './server/expressServer.js';
-import handleButton from './handlers/interactionHandlers.js';
 
 dotenv.config();
 

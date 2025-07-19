@@ -1,19 +1,21 @@
 let currentSession = null;
 
-function startSession(channel) {
+function startSession(channel, context = {}) {
   if (currentSession) return false;
   currentSession = {
       channel,
       encounters: [],      // successful clears
       records: [],         // new records this session
-      sessionMessage: null // message that gets edited every log
+      sessionMessage: null, // message that gets edited every log
+      context,
+      isFinished
   };
 
   return true;
 }
 
 function endSession() {
-  currentSession = null;
+  if(currentSession) currentSession.isFinished = true;
 }
 
 function getSession() {
@@ -37,11 +39,13 @@ function setSessionMessage(message) {
 }
 
 function addEncounter(encounter) {
-  if (currentSession) currentSession.encounters.push(encounter);
+  if (!currentSession) throw new Error('No active session');
+    currentSession.encounters.push(encounter);
 }
 
 function addRecord(record) {
-  if (currentSession) currentSession.records.push(record);
+  if (!currentSession) throw new Error('No active session');
+  currentSession.records.push(record);
 }
 
 export default {
