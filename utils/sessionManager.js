@@ -8,7 +8,7 @@ function startSession(channel, context = {}) {
       records: [],         // new records this session
       sessionMessage: null, // message that gets edited every log
       context,
-      isFinished
+      isFinished: false
   };
 
   return true;
