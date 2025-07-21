@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import sessionManager from '../utils/sessionManager.js';
 import { formatEncounterEmbed } from '../utils/embedFormatter.js';
-import bestTimes from '../data/logs.json' assert { type: 'json' };
+import { getBestTimes } from '../utils/bestTimes.js'
 
 export default {
   data: new SlashCommandBuilder()
@@ -16,6 +16,8 @@ export default {
         flags: MessageFlags.Ephemeral,
       });
     }
+
+    const bestTimes = await getBestTimes();
 
     // 🧠 Start the session and set up tracking
     sessionManager.startSession(interaction.channel);
