@@ -60,9 +60,9 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
   }
 
   const sessionSummary = Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
-    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
+    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.dps_report_url})`).join(' ');
     const bossDisplay = success
-      ? `[${bossName}](${success.logUrl})`
+      ? `[${bossName}](${success.dps_report_url})`
       : bossName;
     return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
   }).join('\n') || 'No logs yet.';
