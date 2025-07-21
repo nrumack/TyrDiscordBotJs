@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import sessionManager from '../utils/sessionManager.js';
-import db from '../utils/db.js'
+import db from '../data/db.js'
 import { formatEncounterEmbed } from '../utils/embedFormatter.js';
 import { getBestTimes } from '../utils/bestTimes.js'
 
