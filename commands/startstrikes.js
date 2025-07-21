@@ -16,11 +16,17 @@ export default {
         flags: MessageFlags.Ephemeral,
       });
     }
+    // 🧠 Start the session and set up tracking
+    sessionManager.startSession(interaction.channel);
 
     const bestTimes = await getBestTimes();
 
-    // 🧠 Start the session and set up tracking
-    sessionManager.startSession(interaction.channel);
+    for (const bt of bestTimes) {
+      const logResult = await db.query(
+        `SELECT log_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
+        [bt.boss_id]
+      );
+    bt.log_url = logResult.rows[0]?.log_url 
 
     // 🖼️ Initial embed with empty log data
     const initialEmbed = formatEncounterEmbed(

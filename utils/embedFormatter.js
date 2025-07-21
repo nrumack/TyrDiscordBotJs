@@ -21,6 +21,12 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     })
     .setTimestamp();
 
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}m ${secs}s`;
+    }
+
   // === FIELD: Current Best Times ===
   if (!bestTimes || Object.keys(bestTimes).length === 0) {
     embed.addFields({
@@ -30,9 +36,10 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     });
   } else {
     const bestTimesText = bestTimes
-  .map(({ boss_name, best_time }) => `• ${boss_name} – **${best_time}s**`)
+  .map(({ boss_name, best_time, log_url }) =>
+    `• [${boss_name}](${log_url}) – **${formatTime(best_time)}**`
+  )
   .join('\n');
-
 
     embed.addFields({
       name: 'Current Best Times',
