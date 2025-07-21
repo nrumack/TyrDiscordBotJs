@@ -25,7 +25,7 @@ export default {
 // 🔗 Enrich each bestTime with its log URL
 for (const bt of bestTimes) {
   const logResult = await db.query(
-    `SELECT log_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
+    `SELECT dps_report_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
     [bt.boss_id]
   );
   bt.dps_report_url = logResult.rows[0]?.dps_report_url || 'https://example.com';
