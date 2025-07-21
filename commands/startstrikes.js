@@ -21,30 +21,33 @@ export default {
 
     const bestTimes = await getBestTimes();
 
-    for (const bt of bestTimes) {
-      const logResult = await db.query(
-        `SELECT log_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
-        [bt.boss_id]
-      );
-    bt.log_url = logResult.rows[0]?.log_url 
+// 🔗 Enrich each bestTime with its log URL
+for (const bt of bestTimes) {
+  const logResult = await db.query(
+    `SELECT log_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
+    [bt.boss_id]
+  );
+  bt.log_url = logResult.rows[0]?.log_url || 'https://example.com';
+}
 
-    // 🖼️ Initial embed with empty log data
-    const initialEmbed = formatEncounterEmbed(
-      {},                     // No current encounter
-      { updated: false },     // Fresh session
-      [],                     // No logs yet
-      [],                     // No records yet
-      bestTimes               // Static best time data
-    );
+// ✅ Embed AFTER enrichment
+const initialEmbed = formatEncounterEmbed(
+  {},                     // No current encounter yet
+  { updated: false },     // Fresh session
+  [],                     // No logs yet
+  [],                     // No records yet
+  bestTimes               // Fully enriched with log URLs
+);
 
-    try {
-      await interaction.reply({ embeds: [initialEmbed] });
-      const sessionMessage = await interaction.fetchReply();
-      sessionManager.setSessionMessage(sessionMessage); 
+try {
+  await interaction.reply({ embeds: [initialEmbed] });
+  const sessionMessage = await interaction.fetchReply();
+  sessionManager.setSessionMessage(sessionMessage); 
 
-      console.log('🚀 Strike session started and message stored!');
-    } catch (err) {
-      console.error('❌ Failed to initialize strike session message:', err);
-    }
+  console.log('🚀 Strike session started and message stored!');
+} catch (err) {
+  console.error('❌ Failed to initialize strike session message:', err);
+}
+
   }
 };
