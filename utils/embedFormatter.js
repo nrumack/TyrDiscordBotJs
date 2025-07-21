@@ -29,9 +29,10 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
       inline: false
     });
   } else {
-    const bestTimesText = Object.values(bestTimes)
-      .map(({ name, logUrl, bestTime }) => `• [${name}](${logUrl}) – **${bestTime}**`)
-      .join('\n');
+    const bestTimesText = bestTimes
+  .map(({ boss_name, best_time }) => `• ${boss_name} – **${best_time}s**`)
+  .join('\n');
+
 
     embed.addFields({
       name: 'Current Best Times',
