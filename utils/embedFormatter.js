@@ -36,8 +36,8 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     });
   } else {
     const bestTimesText = bestTimes
-  .map(({ boss_name, best_time, log_url }) =>
-    `• [${boss_name}](${log_url}) – **${formatTime(best_time)}**`
+  .map(({ boss_name, best_time, dps_report_url }) =>
+    `• [${boss_name}](${dps_report_url}) – **${formatTime(best_time)}**`
   )
   .join('\n');
 
