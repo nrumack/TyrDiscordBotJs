@@ -1,4 +1,4 @@
-import db from './db.js';
+import db from '../data/db.js';
 
 export async function getBestTimes() {
   const result = await db.query(`
