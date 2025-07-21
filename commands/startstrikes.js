@@ -14,7 +14,7 @@ export default {
     if (sessionManager.isActive()) {
       return interaction.reply({
         content: 'A strike session is already active.',
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     }
     // 🧠 Start the session and set up tracking
@@ -28,7 +28,7 @@ for (const bt of bestTimes) {
     `SELECT log_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
     [bt.boss_id]
   );
-  bt.log_url = logResult.rows[0]?.log_url || 'https://example.com';
+  bt.dps_report_url = logResult.rows[0]?.dps_report_url || 'https://example.com';
 }
 
 // ✅ Embed AFTER enrichment
