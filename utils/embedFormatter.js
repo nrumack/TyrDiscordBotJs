@@ -35,11 +35,12 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
       inline: false
     });
   } else {
-    const bestTimesText = bestTimes
-  .map(({ boss_name, best_time, dps_report_url }) =>
-    `• [${boss_name}](${dps_report_url}) – **${formatTime(best_time)}**`
-  )
-  .join('\n');
+  const bestTimesText = Array.isArray(bestTimes)
+  ? bestTimes.map(({ boss_name, best_time, dps_report_url }) =>
+      `• [${boss_name}](${dps_report_url}) – **${formatTime(best_time)}**`
+    ).join('\n')
+  : 'No records yet.';
+
 
     embed.addFields({
       name: 'Current Best Times',
