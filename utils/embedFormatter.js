@@ -28,26 +28,27 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     }
 
   // === FIELD: Current Best Times ===
-  if (!bestTimes || Object.keys(bestTimes).length === 0) {
-    embed.addFields({
-      name: 'Current Best Times',
-      value: 'Record data missing or unavailable.',
-      inline: false
-    });
-  } else {
-  const bestTimesText = Array.isArray(bestTimes)
-  ? bestTimes.map(({ boss_name, best_time, dps_report_url }) =>
+  if (Array.isArray(bestTimes) && bestTimes.length > 0) {
+  const bestTimesText = bestTimes
+    .filter(bt => bt.boss_name && bt.dps_report_url)
+    .map(({ boss_name, best_time, dps_report_url }) =>
       `• [${boss_name}](${dps_report_url}) – **${formatTime(best_time)}**`
-    ).join('\n')
-  : 'No records yet.';
+    )
+    .join('\n') || 'No records yet.';
 
+  embed.addFields({
+    name: 'Current Best Times',
+    value: bestTimesText,
+    inline: false
+  });
+} else {
+  embed.addFields({
+    name: 'Current Best Times',
+    value: 'Record data missing or unavailable.',
+    inline: false
+  });
+}
 
-    embed.addFields({
-      name: 'Current Best Times',
-      value: bestTimesText || 'No records yet.',
-      inline: false
-    });
-  }
 
   // === FIELD: Clears This Session ===
   const grouped = {};
@@ -61,9 +62,9 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
   }
 
   const sessionSummary = Object.entries(grouped).map(([strikeId, { bossName, success, fails }]) => {
-    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.logUrl})`).join(' ');
+    const failLinks = fails.map((f, i) => `[(${i + 1})](${f.dps_report_url})`).join(' ');
     const bossDisplay = success
-      ? `[${bossName}](${success.logUrl})`
+      ? `[${bossName}](${success.dps_report_url})`
       : bossName;
     return `• ${bossDisplay}${failLinks ? ' ' + failLinks : ''}`;
   }).join('\n') || 'No logs yet.';
