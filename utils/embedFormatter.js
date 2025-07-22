@@ -28,27 +28,18 @@ function formatEncounterEmbed(encounter, result, allEncounters, newRecords, best
     }
 
   // === FIELD: Current Best Times ===
-  if (Array.isArray(bestTimes) && bestTimes.length > 0) {
   const bestTimesText = bestTimes
     .filter(bt => bt.boss_name && bt.dps_report_url)
     .map(({ boss_name, best_time, dps_report_url }) =>
       `• [${boss_name}](${dps_report_url}) – **${formatTime(best_time)}**`
     )
-    .join('\n') || 'No records yet.';
+    .join('\n');
 
-  embed.addFields({
+    embed.addFields({
     name: 'Current Best Times',
     value: bestTimesText,
     inline: false
   });
-} else {
-  embed.addFields({
-    name: 'Current Best Times',
-    value: 'Record data missing or unavailable.',
-    inline: false
-  });
-}
-
 
   // === FIELD: Clears This Session ===
   const grouped = {};
