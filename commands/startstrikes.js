@@ -31,6 +31,10 @@ for (const bt of bestTimes) {
   bt.dps_report_url = logResult.rows[0]?.dps_report_url || 'https://example.com';
 }
 
+console.log('🧪 typeof bestTimes:', typeof bestTimes);
+console.log('🔍 bestTimes preview:', bestTimes);
+
+
 // ✅ Embed AFTER enrichment
 const initialEmbed = formatEncounterEmbed(
   {},                     // No current encounter yet
