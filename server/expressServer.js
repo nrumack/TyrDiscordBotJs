@@ -62,14 +62,25 @@ app.post('/log-uploaded', async (req, res) => {
           success: isSuccess,
           logUrl
         });
-        
+
+        let bestTimes = await getBestTimes();
+
+        for (const bt of bestTimes) {
+          const logResult = await db.query(
+            `SELECT dps_report_url FROM logs WHERE boss_id = $1 AND success = true ORDER BY duration ASC LIMIT 1`,
+            [bt.boss_id]
+          );
+          bt.dps_report_url = logResult.rows[0]?.dps_report_url || 'https://example.com';
+        }
+
         const updatedEmbed = formatEncounterEmbed(
-          { bossName: boss },
-          { updated: true },
-          sessionManager.getEncounters(),
-          sessionManager.getRecords(),
-          bestTimes
+          { bossName: boss, dps_report_url: logUrl },       // Latest log
+          { updated: true },                                // Update flag
+          sessionManager.getEncounters(),                   // All logs
+          sessionManager.getRecords(),                      // New records this session
+          bestTimes                                         // Enriched best times
         );
+
 
         await session.sessionMessage.edit({ embeds: [updatedEmbed] });
       }
