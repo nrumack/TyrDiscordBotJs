@@ -61,7 +61,8 @@ app.post('/log-uploaded', async (req, res) => {
           bossName: boss,
           strikeId: bossId,
           success: isSuccess,
-          logUrl
+          logUrl,
+          dps_report_url: logUrl
         });
 
         let bestTimes = await getBestTimes();
