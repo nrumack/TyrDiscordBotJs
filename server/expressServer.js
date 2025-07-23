@@ -89,6 +89,8 @@ app.post('/log-uploaded', async (req, res) => {
       res.sendStatus(200);
     } catch (error) {
       console.error('InsertLog failed:', error);
+      console.error('InsertLog failed:', error.message);
+      console.error('InsertLog stack:', error.stack);
       res.status(500).send('Database error');
     }
 
