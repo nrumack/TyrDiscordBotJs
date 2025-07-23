@@ -14,6 +14,10 @@ function startSession(channel, context = {}) {
   return true;
 }
 
+function resetSession() {
+  currentSession = null;
+}
+
 function endSession() {
   if(currentSession) currentSession.isFinished = true;
 }
@@ -57,5 +61,6 @@ export default {
   addEncounter,
   addRecord,
   getEncounters,
-  getRecords
+  getRecords,
+  resetSession
 };

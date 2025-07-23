@@ -77,6 +77,8 @@ export default {
 
     session.sessionMessage = null;
     sessionManager.endSession();
+    sessionManager.resetSession();
+
 
     await interaction.reply({
       content: 'Strike session ended and summary posted.',
